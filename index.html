@@ -281,6 +281,59 @@
             color: var(--text-primary);
         }
 
+        .col-options {
+            font-size: 11px;
+            color: var(--text-muted);
+            max-width: 300px;
+        }
+
+        .options-list {
+            display: none;
+            padding: 4px 0;
+            line-height: 1.5;
+        }
+
+        .results-table tr:hover .options-list,
+        .results-table tr:focus-within .options-list {
+            display: block;
+        }
+
+        .option-item {
+            padding: 2px 0;
+            border-bottom: 1px dotted var(--border-color);
+        }
+
+        .option-item:last-child {
+            border-bottom: none;
+        }
+
+        .option-code {
+            font-family: 'Consolas', monospace;
+            font-weight: 600;
+            color: var(--accent-blue);
+            margin-right: 6px;
+        }
+
+        .option-current {
+            background: var(--accent-blue-light);
+            padding: 1px 4px;
+            border-radius: 2px;
+        }
+
+        .options-toggle {
+            cursor: pointer;
+            color: var(--accent-blue);
+            font-size: 11px;
+            padding: 2px 6px;
+            border: 1px solid var(--accent-blue);
+            border-radius: 3px;
+            background: transparent;
+        }
+
+        .options-toggle:hover {
+            background: var(--accent-blue-light);
+        }
+
         .unknown {
             color: #c00;
             font-style: italic;
@@ -632,6 +685,7 @@
                                 <th>Code</th>
                                 <th>Category</th>
                                 <th>Description</th>
+                                <th>Available Options</th>
                             </tr>
                         </thead>
                         <tbody id="results-body"></tbody>
@@ -899,12 +953,12 @@
                     "K": "1 Blower + Premium Efficiency TEFC Motor + 1 VFD",
                     "L": "2 Blowers + Premium Efficiency TEFC Motors + 2 Motors on 1 VFD",
                     "M": "2 Blowers + Premium Efficiency TEFC Motors + 2 Motors on 2 VFDs",
-                    "N": "Option E + Shaft Grounding",
-                    "P": "Option F + Shaft Grounding",
-                    "Q": "Option G + Shaft Grounding",
-                    "R": "Option K + Shaft Grounding",
-                    "S": "Option L + Shaft Grounding",
-                    "T": "Option M + Shaft Grounding"
+                    "N": "1 Blower + Premium Efficiency Motor + 1 VFD + Shaft Grounding",
+                    "P": "2 Blowers + Premium Efficiency Motors + 2 Motors on 1 VFD + Shaft Grounding",
+                    "Q": "2 Blowers + Premium Efficiency Motors + 2 Motors on 2 VFDs + Shaft Grounding",
+                    "R": "1 Blower + Premium Efficiency TEFC Motor + 1 VFD + Shaft Grounding",
+                    "S": "2 Blowers + Premium Efficiency TEFC Motors + 2 Motors on 1 VFD + Shaft Grounding",
+                    "T": "2 Blowers + Premium Efficiency TEFC Motors + 2 Motors on 2 VFDs + Shaft Grounding"
                 }
             },
             F1C: {
@@ -990,13 +1044,13 @@
                     "B": "Factory Wired 115V Outlet",
                     "C": "Blower Aux. Contact",
                     "D": "Remote Start/Stop Terminals",
-                    "E": "Options A + C",
-                    "F": "Options A + D",
-                    "G": "Options B + C",
-                    "H": "Options B + D",
-                    "J": "Options A + C + D",
-                    "K": "Options B + C + D",
-                    "L": "Options C + D"
+                    "E": "Field Wired 115V Outlet + Blower Aux. Contact",
+                    "F": "Field Wired 115V Outlet + Remote Start/Stop Terminals",
+                    "G": "Factory Wired 115V Outlet + Blower Aux. Contact",
+                    "H": "Factory Wired 115V Outlet + Remote Start/Stop Terminals",
+                    "J": "Field Wired 115V Outlet + Blower Aux. Contact + Remote Start/Stop Terminals",
+                    "K": "Factory Wired 115V Outlet + Blower Aux. Contact + Remote Start/Stop Terminals",
+                    "L": "Blower Aux. Contact + Remote Start/Stop Terminals"
                 }
             },
             F5A: {
@@ -1016,12 +1070,12 @@
                     "K": "1 Blower + Premium Efficiency TEFC Motor + 1 VFD",
                     "L": "2 Blowers + Premium Efficiency TEFC Motors + 2 Motors on 1 VFD",
                     "M": "2 Blowers + Premium Efficiency TEFC Motors + 2 Motors on 2 VFDs",
-                    "N": "Option D + Shaft Grounding",
-                    "P": "Option F + Shaft Grounding",
-                    "Q": "Option G + Shaft Grounding",
-                    "R": "Option K + Shaft Grounding",
-                    "S": "Option L + Shaft Grounding",
-                    "T": "Option M + Shaft Grounding"
+                    "N": "1 Blower + Premium Efficiency Motor + 1 VFD + Shaft Grounding",
+                    "P": "2 Blowers + Premium Efficiency Motors + 2 Motors on 1 VFD + Shaft Grounding",
+                    "Q": "2 Blowers + Premium Efficiency Motors + 2 Motors on 2 VFDs + Shaft Grounding",
+                    "R": "1 Blower + Premium Efficiency TEFC Motor + 1 VFD + Shaft Grounding",
+                    "S": "2 Blowers + Premium Efficiency TEFC Motors + 2 Motors on 1 VFD + Shaft Grounding",
+                    "T": "2 Blowers + Premium Efficiency TEFC Motors + 2 Motors on 2 VFDs + Shaft Grounding"
                 }
             },
             F5B: {
@@ -1075,10 +1129,10 @@
                     "B": "Metal Mesh Outside Air Filter",
                     "C": "Lint Screen Filter",
                     "D": "Exhaust Air ERW Filter",
-                    "E": "Options A + B",
-                    "F": "Options A + D",
-                    "G": "Options B + D",
-                    "H": "Options A + B + D"
+                    "E": "2\" Pleated MERV 8 + Metal Mesh Outside Air Filter",
+                    "F": "2\" Pleated MERV 8 + Exhaust Air ERW Filter",
+                    "G": "Metal Mesh Outside Air Filter + Exhaust Air ERW Filter",
+                    "H": "2\" Pleated MERV 8 + Metal Mesh Outside Air Filter + Exhaust Air ERW Filter"
                 }
             },
             F6B: {
@@ -1102,7 +1156,7 @@
                     "0": "Standard",
                     "A": "Clogged Filter Switch",
                     "B": "Magnehelic Gauge",
-                    "C": "Options A + B"
+                    "C": "Clogged Filter Switch + Magnehelic Gauge"
                 }
             },
             F7: {
@@ -1116,32 +1170,32 @@
                     "C": "Adjustable Fan Cycling",
                     "D": "Adjustable Compressor Lockout",
                     "E": "Freeze Stats - Each Circuit",
-                    "F": "Options A + B",
-                    "G": "Options A + C",
-                    "H": "Options A + D",
-                    "J": "Options A + E",
-                    "K": "Options B + C",
-                    "L": "Options B + D",
-                    "M": "Options B + E",
-                    "N": "Adjustable Fan Cycling with Adjustable Compressor Lockout",
-                    "P": "Options C + E",
-                    "Q": "Options D + E",
-                    "R": "Options A + B + C",
-                    "S": "Options A + B + D",
-                    "T": "Options A + B + E",
-                    "U": "Options A + N",
-                    "V": "Options A + C + E",
-                    "W": "Options A + D + E",
-                    "Y": "Options B + N",
-                    "Z": "Options B + C + E",
-                    "1": "Options B + D + E",
-                    "2": "Options N + E",
-                    "3": "Options A + B + N",
-                    "4": "Options A + B + C + E",
-                    "5": "Options A + B + D + E",
-                    "6": "Options A + N + E",
-                    "7": "Options B + N + E",
-                    "8": "Options A + B + N + E"
+                    "F": "5 Min. Time Delay + 20 Sec. Time Delay Staging",
+                    "G": "5 Min. Time Delay + Adjustable Fan Cycling",
+                    "H": "5 Min. Time Delay + Adjustable Compressor Lockout",
+                    "J": "5 Min. Time Delay + Freeze Stats",
+                    "K": "20 Sec. Time Delay Staging + Adjustable Fan Cycling",
+                    "L": "20 Sec. Time Delay Staging + Adjustable Compressor Lockout",
+                    "M": "20 Sec. Time Delay Staging + Freeze Stats",
+                    "N": "Adjustable Fan Cycling + Adjustable Compressor Lockout",
+                    "P": "Adjustable Fan Cycling + Freeze Stats",
+                    "Q": "Adjustable Compressor Lockout + Freeze Stats",
+                    "R": "5 Min. Time Delay + 20 Sec. Staging + Adjustable Fan Cycling",
+                    "S": "5 Min. Time Delay + 20 Sec. Staging + Adjustable Compressor Lockout",
+                    "T": "5 Min. Time Delay + 20 Sec. Staging + Freeze Stats",
+                    "U": "5 Min. Time Delay + Adjustable Fan Cycling + Adjustable Compressor Lockout",
+                    "V": "5 Min. Time Delay + Adjustable Fan Cycling + Freeze Stats",
+                    "W": "5 Min. Time Delay + Adjustable Compressor Lockout + Freeze Stats",
+                    "Y": "20 Sec. Staging + Adjustable Fan Cycling + Adjustable Compressor Lockout",
+                    "Z": "20 Sec. Staging + Adjustable Fan Cycling + Freeze Stats",
+                    "1": "20 Sec. Staging + Adjustable Compressor Lockout + Freeze Stats",
+                    "2": "Adjustable Fan Cycling + Adjustable Compressor Lockout + Freeze Stats",
+                    "3": "5 Min. Time Delay + 20 Sec. Staging + Adj. Fan Cycling + Adj. Comp. Lockout",
+                    "4": "5 Min. Time Delay + 20 Sec. Staging + Adjustable Fan Cycling + Freeze Stats",
+                    "5": "5 Min. Time Delay + 20 Sec. Staging + Adj. Comp. Lockout + Freeze Stats",
+                    "6": "5 Min. Time Delay + Adj. Fan Cycling + Adj. Comp. Lockout + Freeze Stats",
+                    "7": "20 Sec. Staging + Adj. Fan Cycling + Adj. Comp. Lockout + Freeze Stats",
+                    "8": "5 Min. Time Delay + 20 Sec. Staging + Adj. Fan Cycling + Adj. Comp. Lockout + Freeze Stats"
                 }
             },
             F8: {
@@ -1150,29 +1204,29 @@
                 group: "Features",
                 codes: {
                     "0": "Standard",
-                    "A": "Hot Gas Bypass Lead Stage or Hot Gas Bypass Lag Stage with Lead Variable Capacity Compressor",
+                    "A": "Hot Gas Bypass Lead Stage (or Lag Stage with Lead VCC)",
                     "B": "Hot Gas Bypass Lead and Lag Stages",
                     "D": "Modulating Hot Gas Reheat",
                     "E": "0°F Low Ambient Lead Stage",
-                    "H": "Options A + D (Hot Gas Bypass + Modulating Hot Gas Reheat)",
-                    "J": "Options B + D (Hot Gas Bypass Both Stages + Modulating Hot Gas Reheat)",
-                    "K": "Options A + E",
-                    "L": "Options B + E",
+                    "H": "Hot Gas Bypass Lead + Modulating Hot Gas Reheat",
+                    "J": "Hot Gas Bypass Lead & Lag + Modulating Hot Gas Reheat",
+                    "K": "Hot Gas Bypass Lead + 0°F Low Ambient Lead Stage",
+                    "L": "Hot Gas Bypass Lead & Lag + 0°F Low Ambient Lead Stage",
                     "N": "Polymer E-Coated Modulating Hot Gas Reheat",
-                    "R": "Options A + N",
-                    "S": "Options B + N",
+                    "R": "Hot Gas Bypass Lead + Polymer E-Coated Mod. Hot Gas Reheat",
+                    "S": "Hot Gas Bypass Lead & Lag + Polymer E-Coated Mod. Hot Gas Reheat",
                     "T": "Parallel Modulating Hot Gas Reheat Microchannel Coil - Lag Circuit",
-                    "U": "Options A + T",
-                    "V": "Options B + T",
-                    "W": "Polymer E-Coated Parallel Modulating Hot Gas Reheat Microchannel Coil - Lag Circuit",
-                    "Y": "Options A + W",
-                    "Z": "Options B + W",
+                    "U": "Hot Gas Bypass Lead + Parallel Mod. Hot Gas Reheat Microchannel - Lag",
+                    "V": "Hot Gas Bypass Lead & Lag + Parallel Mod. Hot Gas Reheat Microchannel - Lag",
+                    "W": "Polymer E-Coated Parallel Mod. Hot Gas Reheat Microchannel - Lag Circuit",
+                    "Y": "Hot Gas Bypass Lead + Polymer E-Coated Parallel Mod. Reheat Microchannel - Lag",
+                    "Z": "Hot Gas Bypass Lead & Lag + Polymer E-Coated Parallel Mod. Reheat Microchannel - Lag",
                     "1": "All Circuit Parallel Modulating Hot Gas Reheat Microchannel Coil",
-                    "2": "Options A + 1",
-                    "3": "Options B + 1",
-                    "4": "Polymer E-Coated All Circuit Parallel Modulating Hot Gas Reheat Microchannel Coil",
-                    "5": "Options A + 4",
-                    "6": "Options B + 4"
+                    "2": "Hot Gas Bypass Lead + All Circuit Parallel Mod. Hot Gas Reheat Microchannel",
+                    "3": "Hot Gas Bypass Lead & Lag + All Circuit Parallel Mod. Hot Gas Reheat Microchannel",
+                    "4": "Polymer E-Coated All Circuit Parallel Mod. Hot Gas Reheat Microchannel",
+                    "5": "Hot Gas Bypass Lead + Polymer E-Coated All Circuit Parallel Mod. Reheat Microchannel",
+                    "6": "Hot Gas Bypass Lead & Lag + Polymer E-Coated All Circuit Parallel Mod. Reheat Microchannel"
                 }
             },
             F9: {
@@ -1183,17 +1237,17 @@
                     "0": "Standard",
                     "A": "Sight Glass",
                     "B": "Compressor Isolation Valves",
-                    "C": "Options A + B",
+                    "C": "Sight Glass + Compressor Isolation Valves",
                     "E": "ECM Condenser Fan - Head Pressure Control",
                     "F": "VFD Controlled Condenser Fans - Variable Speed",
-                    "K": "Options A + E",
-                    "L": "Options B + E",
-                    "M": "Options A + B + E",
-                    "N": "Options A + F",
-                    "P": "Options B + F",
-                    "Q": "Options C + F",
-                    "T": "Options R + B",
-                    "U": "Options R + A + B"
+                    "K": "Sight Glass + ECM Condenser Fan Head Pressure Control",
+                    "L": "Compressor Isolation Valves + ECM Condenser Fan Head Pressure Control",
+                    "M": "Sight Glass + Compressor Isolation Valves + ECM Condenser Fan Head Pressure",
+                    "N": "Sight Glass + VFD Controlled Condenser Fans",
+                    "P": "Compressor Isolation Valves + VFD Controlled Condenser Fans",
+                    "Q": "Sight Glass + Compressor Isolation Valves + VFD Controlled Condenser Fans",
+                    "T": "Compressor Isolation Valves (Special Configuration)",
+                    "U": "Sight Glass + Compressor Isolation Valves (Special Configuration)"
                 }
             },
             F10: {
@@ -1241,34 +1295,34 @@
                     "A": "Return and Supply Air Firestat",
                     "B": "Return Air Smoke Detector",
                     "C": "Supply Air Smoke Detector",
-                    "D": "Options B + C",
-                    "E": "Options A + B",
-                    "F": "Options A + C",
-                    "G": "Options A + B + C",
+                    "D": "Return Air Smoke Detector + Supply Air Smoke Detector",
+                    "E": "Firestat + Return Air Smoke Detector",
+                    "F": "Firestat + Supply Air Smoke Detector",
+                    "G": "Firestat + Return Air Smoke + Supply Air Smoke Detectors",
                     "H": "Remote Smoke Detector Terminals",
-                    "J": "Options A + H",
-                    "K": "Options B + H",
-                    "L": "Options C + H",
-                    "M": "Options D + H",
-                    "N": "Options A + B + H",
-                    "P": "Options A + C + H",
-                    "Q": "Options A + B + C + H",
+                    "J": "Firestat + Remote Smoke Detector Terminals",
+                    "K": "Return Air Smoke Detector + Remote Smoke Terminals",
+                    "L": "Supply Air Smoke Detector + Remote Smoke Terminals",
+                    "M": "Return + Supply Air Smoke Detectors + Remote Smoke Terminals",
+                    "N": "Firestat + Return Air Smoke + Remote Smoke Terminals",
+                    "P": "Firestat + Supply Air Smoke + Remote Smoke Terminals",
+                    "Q": "Firestat + Return + Supply Air Smoke + Remote Smoke Terminals",
                     "R": "High Condensate Level Switch",
-                    "S": "Options A + R",
-                    "T": "Options B + R",
-                    "U": "Options C + R",
-                    "V": "Options D + R",
-                    "W": "Options H + R",
-                    "Y": "Options E + R",
-                    "Z": "Options F + R",
-                    "1": "Options G + R",
-                    "2": "Options J + R",
-                    "3": "Options K + R",
-                    "4": "Options L + R",
-                    "5": "Options M + R",
-                    "6": "Options N + R",
-                    "7": "Options P + R",
-                    "8": "Options Q + R"
+                    "S": "Firestat + High Condensate Level Switch",
+                    "T": "Return Air Smoke Detector + High Condensate Level Switch",
+                    "U": "Supply Air Smoke Detector + High Condensate Level Switch",
+                    "V": "Return + Supply Air Smoke Detectors + High Condensate Switch",
+                    "W": "Remote Smoke Terminals + High Condensate Level Switch",
+                    "Y": "Firestat + Return Air Smoke + High Condensate Switch",
+                    "Z": "Firestat + Supply Air Smoke + High Condensate Switch",
+                    "1": "Firestat + Return + Supply Air Smoke + High Condensate Switch",
+                    "2": "Firestat + Remote Smoke Terminals + High Condensate Switch",
+                    "3": "Return Air Smoke + Remote Terminals + High Condensate Switch",
+                    "4": "Supply Air Smoke + Remote Terminals + High Condensate Switch",
+                    "5": "Return + Supply Smoke + Remote Terminals + High Condensate Switch",
+                    "6": "Firestat + Return Smoke + Remote Terminals + High Condensate",
+                    "7": "Firestat + Supply Smoke + Remote Terminals + High Condensate",
+                    "8": "Firestat + Return + Supply Smoke + Remote Terminals + High Condensate"
                 }
             },
             F12: {
@@ -1282,32 +1336,32 @@
                     "C": "Energy Recovery Wheel Defrost",
                     "D": "Energy Recovery Wheel Rotation Detection",
                     "E": "Compressor Power Factor Correction",
-                    "F": "Options A + B",
-                    "G": "Options A + C",
-                    "H": "Options A + D",
-                    "J": "Options A + E",
-                    "K": "Options B + C",
-                    "L": "Options B + D",
-                    "M": "Options B + E",
-                    "N": "Options C + D",
-                    "P": "Options C + E",
-                    "Q": "Options D + E",
-                    "R": "Options A + B + C",
-                    "S": "Options A + B + D",
-                    "T": "Options A + B + E",
-                    "U": "Options A + C + D",
-                    "V": "Options A + C + E",
-                    "W": "Options A + D + E",
-                    "Y": "Options B + C + D",
-                    "Z": "Options B + C + E",
-                    "1": "Options B + D + E",
-                    "2": "Options C + D + E",
-                    "3": "Options A + B + C + D",
-                    "4": "Options A + B + C + E",
-                    "5": "Options A + B + D + E",
-                    "6": "Options A + C + D + E",
-                    "7": "Options B + C + D + E",
-                    "8": "Options A + B + C + D + E"
+                    "F": "Low Limit + Phase/Brown Out Protection",
+                    "G": "Low Limit + ERW Defrost",
+                    "H": "Low Limit + ERW Rotation Detection",
+                    "J": "Low Limit + Compressor Power Factor Correction",
+                    "K": "Phase/Brown Out + ERW Defrost",
+                    "L": "Phase/Brown Out + ERW Rotation Detection",
+                    "M": "Phase/Brown Out + Compressor Power Factor Correction",
+                    "N": "ERW Defrost + ERW Rotation Detection",
+                    "P": "ERW Defrost + Compressor Power Factor Correction",
+                    "Q": "ERW Rotation Detection + Compressor Power Factor Correction",
+                    "R": "Low Limit + Phase/Brown Out + ERW Defrost",
+                    "S": "Low Limit + Phase/Brown Out + ERW Rotation Detection",
+                    "T": "Low Limit + Phase/Brown Out + Comp. Power Factor",
+                    "U": "Low Limit + ERW Defrost + ERW Rotation Detection",
+                    "V": "Low Limit + ERW Defrost + Comp. Power Factor",
+                    "W": "Low Limit + ERW Rotation Detection + Comp. Power Factor",
+                    "Y": "Phase/Brown Out + ERW Defrost + ERW Rotation Detection",
+                    "Z": "Phase/Brown Out + ERW Defrost + Comp. Power Factor",
+                    "1": "Phase/Brown Out + ERW Rotation Detection + Comp. Power Factor",
+                    "2": "ERW Defrost + ERW Rotation Detection + Comp. Power Factor",
+                    "3": "Low Limit + Phase/Brown Out + ERW Defrost + ERW Rotation",
+                    "4": "Low Limit + Phase/Brown Out + ERW Defrost + Comp. Power Factor",
+                    "5": "Low Limit + Phase/Brown Out + ERW Rotation + Comp. Power Factor",
+                    "6": "Low Limit + ERW Defrost + ERW Rotation + Comp. Power Factor",
+                    "7": "Phase/Brown Out + ERW Defrost + ERW Rotation + Comp. Power Factor",
+                    "8": "Low Limit + Phase/Brown Out + ERW Defrost + ERW Rotation + Comp. Power Factor"
                 }
             },
             F13: {
@@ -1411,18 +1465,18 @@
                     "A": "Base Insulation",
                     "B": "Burglar Bars",
                     "C": "Condenser Coil Guards (or Screen)",
-                    "D": "Options A + B",
-                    "E": "Options A + C",
-                    "F": "Options B + C",
-                    "G": "Options A + B + C",
+                    "D": "Base Insulation + Burglar Bars",
+                    "E": "Base Insulation + Condenser Coil Guards",
+                    "F": "Burglar Bars + Condenser Coil Guards",
+                    "G": "Base Insulation + Burglar Bars + Condenser Coil Guards",
                     "H": "Motorized Relief Dampers",
-                    "J": "Options A + H",
-                    "K": "Options B + H",
-                    "L": "Options C + H",
-                    "M": "Options A + B + H",
-                    "N": "Options A + C + H",
-                    "P": "Options B + C + H",
-                    "Q": "Options A + B + C + H"
+                    "J": "Base Insulation + Motorized Relief Dampers",
+                    "K": "Burglar Bars + Motorized Relief Dampers",
+                    "L": "Condenser Coil Guards + Motorized Relief Dampers",
+                    "M": "Base Insulation + Burglar Bars + Motorized Relief Dampers",
+                    "N": "Base Insulation + Condenser Coil Guards + Motorized Relief Dampers",
+                    "P": "Burglar Bars + Condenser Coil Guards + Motorized Relief Dampers",
+                    "Q": "Base Insulation + Burglar Bars + Coil Guards + Motorized Relief Dampers"
                 }
             },
             F18: {
@@ -1466,8 +1520,8 @@
                     "A": "Export Crating",
                     "B": "Export Crating - No Condenser Section",
                     "C": "Shrink Wrap",
-                    "D": "Options A + C",
-                    "E": "Options B + C"
+                    "D": "Export Crating + Shrink Wrap",
+                    "E": "Export Crating (No Condenser) + Shrink Wrap"
                 }
             },
             F21: {
@@ -1480,13 +1534,13 @@
                     "B": "Water Flow Switch",
                     "C": "Motorized Shut-off Valve",
                     "D": "Head Pressure Control Valve",
-                    "E": "Options A + B",
-                    "F": "Options A + C",
-                    "G": "Options A + D",
-                    "H": "Options B + C",
-                    "J": "Options B + D",
-                    "L": "Options A + B + C",
-                    "M": "Options A + B + D"
+                    "E": "Balancing Valves + Water Flow Switch",
+                    "F": "Balancing Valves + Motorized Shut-off Valve",
+                    "G": "Balancing Valves + Head Pressure Control Valve",
+                    "H": "Water Flow Switch + Motorized Shut-off Valve",
+                    "J": "Water Flow Switch + Head Pressure Control Valve",
+                    "L": "Balancing Valves + Water Flow Switch + Motorized Shut-off Valve",
+                    "M": "Balancing Valves + Water Flow Switch + Head Pressure Control Valve"
                 }
             },
             F22: {
@@ -2011,7 +2065,7 @@
             const resultCount = document.getElementById('result-count');
             
             if (!input) {
-                resultsBody.innerHTML = '<tr><td colspan="4" class="no-results">Enter a model string to decode</td></tr>';
+                resultsBody.innerHTML = '<tr><td colspan="5" class="no-results">Enter a model string to decode</td></tr>';
                 buildSidebar([]);
                 resultCount.textContent = '';
                 document.getElementById('status-text').textContent = 'Ready';
@@ -2022,7 +2076,7 @@
             const [modelPart, featurePart] = normalized.split(':');
             
             if (!modelPart) {
-                resultsBody.innerHTML = '<tr><td colspan="4" class="no-results">Invalid model string format</td></tr>';
+                resultsBody.innerHTML = '<tr><td colspan="5" class="no-results">Invalid model string format</td></tr>';
                 return;
             }
 
@@ -2146,14 +2200,47 @@
             tbody.innerHTML = results.map((item, i) => {
                 const hasWarning = warningCategories.includes(item.category);
                 const rowClass = `${i % 2 ? 'alt' : ''} ${hasWarning ? 'has-warning' : ''}`.trim();
+                const availableOptions = getAvailableOptions(item.category, item.code);
                 return `
-                <tr data-key="${item.category}" class="${rowClass}">
+                <tr data-key="${item.category}" class="${rowClass}" tabindex="0">
                     <td class="col-position">${item.position}</td>
                     <td class="col-code">${item.code}${hasWarning ? '<span class="warning-badge">!</span>' : ''}</td>
                     <td class="col-category">${item.name}</td>
                     <td class="col-description ${item.description === 'Unknown code' ? 'unknown' : ''}">${item.description}</td>
+                    <td class="col-options">
+                        <span class="options-toggle">Hover to view options</span>
+                        <div class="options-list">${availableOptions}</div>
+                    </td>
                 </tr>
             `}).join('');
+        }
+
+        // Get all available options for a category, highlighting the current selection
+        function getAvailableOptions(category, currentCode) {
+            const def = codeDefinitions[category];
+            if (!def || !def.codes) return '<em>No options available</em>';
+
+            const entries = Object.entries(def.codes);
+            if (entries.length === 0) return '<em>No options available</em>';
+
+            // Limit display to first 10 options if there are many
+            const displayEntries = entries.slice(0, 15);
+            const hasMore = entries.length > 15;
+
+            let html = displayEntries.map(([code, desc]) => {
+                const isCurrent = code === currentCode;
+                // Truncate long descriptions
+                const shortDesc = desc.length > 50 ? desc.substring(0, 47) + '...' : desc;
+                return `<div class="option-item${isCurrent ? ' option-current' : ''}">
+                    <span class="option-code">${code}</span>${shortDesc}
+                </div>`;
+            }).join('');
+
+            if (hasMore) {
+                html += `<div class="option-item"><em>...and ${entries.length - 15} more options</em></div>`;
+            }
+
+            return html;
         }
 
         function performSearch() {
