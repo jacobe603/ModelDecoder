@@ -293,8 +293,7 @@
             line-height: 1.5;
         }
 
-        .results-table tr:hover .options-list,
-        .results-table tr:focus-within .options-list {
+        .options-list.expanded {
             display: block;
         }
 
@@ -324,14 +323,20 @@
             cursor: pointer;
             color: var(--accent-blue);
             font-size: 11px;
-            padding: 2px 6px;
+            padding: 4px 8px;
             border: 1px solid var(--accent-blue);
             border-radius: 3px;
-            background: transparent;
+            background: var(--bg-white);
+            font-family: inherit;
         }
 
         .options-toggle:hover {
             background: var(--accent-blue-light);
+        }
+
+        .options-toggle:active {
+            background: var(--accent-blue);
+            color: white;
         }
 
         .unknown {
@@ -2208,11 +2213,18 @@
                     <td class="col-category">${item.name}</td>
                     <td class="col-description ${item.description === 'Unknown code' ? 'unknown' : ''}">${item.description}</td>
                     <td class="col-options">
-                        <span class="options-toggle">Hover to view options</span>
+                        <button class="options-toggle" onclick="toggleOptions(this)">Show options</button>
                         <div class="options-list">${availableOptions}</div>
                     </td>
                 </tr>
             `}).join('');
+        }
+
+        // Toggle the options list visibility
+        function toggleOptions(button) {
+            const optionsList = button.nextElementSibling;
+            const isExpanded = optionsList.classList.toggle('expanded');
+            button.textContent = isExpanded ? 'Hide options' : 'Show options';
         }
 
         // Get all available options for a category, highlighting the current selection
