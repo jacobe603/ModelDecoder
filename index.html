@@ -1,0 +1,1663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AAON RN Series Model String Parser</title>
+    <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-main: #f0f0f0;
+            --bg-white: #ffffff;
+            --bg-header: #e8e8e8;
+            --border-color: #d0d0d0;
+            --border-dark: #a0a0a0;
+            --accent-blue: #0078d4;
+            --accent-blue-light: #e5f3ff;
+            --text-primary: #1a1a1a;
+            --text-secondary: #444444;
+            --text-muted: #666666;
+            --row-hover: #f5f5f5;
+            --row-alt: #fafafa;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg-main);
+            color: var(--text-primary);
+            font-size: 13px;
+            line-height: 1.4;
+        }
+
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        /* Header / Title Bar */
+        .title-bar {
+            background: var(--bg-white);
+            border-bottom: 1px solid var(--border-color);
+            padding: 8px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .app-icon {
+            width: 20px;
+            height: 20px;
+            background: var(--accent-blue);
+            border-radius: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 11px;
+        }
+
+        .app-title {
+            font-size: 13px;
+            color: var(--text-primary);
+        }
+
+        /* Model String Display */
+        .model-string-bar {
+            background: var(--bg-white);
+            border-bottom: 1px solid var(--border-color);
+            padding: 12px 16px;
+        }
+
+        .model-string-input-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .model-string-input {
+            flex: 1;
+            padding: 6px 10px;
+            border: 1px solid var(--border-dark);
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 13px;
+            color: var(--text-primary);
+            background: var(--bg-white);
+        }
+
+        .model-string-input:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 1px var(--accent-blue);
+        }
+
+        .model-string-input::placeholder {
+            color: #999;
+        }
+
+        /* Tabs */
+        .tabs-bar {
+            background: var(--bg-white);
+            border-bottom: 1px solid var(--border-color);
+            padding: 0 16px;
+            display: flex;
+            gap: 0;
+        }
+
+        .tab-btn {
+            padding: 10px 20px;
+            border: none;
+            background: transparent;
+            font-family: inherit;
+            font-size: 13px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -1px;
+        }
+
+        .tab-btn:hover {
+            background: var(--row-hover);
+        }
+
+        .tab-btn.active {
+            color: var(--accent-blue);
+            border-bottom-color: var(--accent-blue);
+            font-weight: 600;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 240px;
+            background: var(--bg-white);
+            border-right: 1px solid var(--border-color);
+            overflow-y: auto;
+        }
+
+        .sidebar-header {
+            padding: 10px 12px;
+            background: #4a7c9b;
+            color: white;
+            font-weight: 600;
+            font-size: 12px;
+        }
+
+        .nav-section {
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .nav-section-title {
+            padding: 8px 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            background: var(--bg-header);
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 6px 12px;
+            cursor: pointer;
+            border-left: 3px solid transparent;
+        }
+
+        .nav-item:hover {
+            background: var(--row-hover);
+        }
+
+        .nav-item.active {
+            background: var(--accent-blue-light);
+            border-left-color: var(--accent-blue);
+        }
+
+        .nav-item.child {
+            padding-left: 28px;
+        }
+
+        .nav-item-code {
+            width: 45px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            font-size: 12px;
+        }
+
+        .nav-item-name {
+            flex: 1;
+            color: var(--text-primary);
+            font-size: 12px;
+        }
+
+        /* Results Panel */
+        .results-panel {
+            flex: 1;
+            overflow-y: auto;
+            background: var(--bg-white);
+        }
+
+        .results-header {
+            padding: 10px 16px;
+            background: #4a7c9b;
+            color: white;
+            font-weight: 600;
+            font-size: 12px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .results-table th {
+            text-align: left;
+            padding: 8px 12px;
+            background: var(--bg-header);
+            border-bottom: 1px solid var(--border-color);
+            font-weight: 600;
+            font-size: 11px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            position: sticky;
+            top: 0;
+        }
+
+        .results-table td {
+            padding: 8px 12px;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: top;
+        }
+
+        .results-table tr:hover {
+            background: var(--row-hover);
+        }
+
+        .results-table tr.alt {
+            background: var(--row-alt);
+        }
+
+        .results-table tr.alt:hover {
+            background: var(--row-hover);
+        }
+
+        .col-position {
+            width: 60px;
+            font-weight: 600;
+            color: var(--accent-blue);
+        }
+
+        .col-code {
+            width: 50px;
+            font-family: 'Consolas', monospace;
+            font-weight: 600;
+            background: #f5f5f5;
+            text-align: center;
+        }
+
+        .col-category {
+            width: 180px;
+            color: var(--text-secondary);
+        }
+
+        .col-description {
+            color: var(--text-primary);
+        }
+
+        .unknown {
+            color: #c00;
+            font-style: italic;
+        }
+
+        /* Search Panel */
+        .search-panel {
+            display: none;
+            flex: 1;
+            flex-direction: column;
+            background: var(--bg-white);
+        }
+
+        .search-panel.active {
+            display: flex;
+        }
+
+        .parse-panel {
+            display: none;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .parse-panel.active {
+            display: flex;
+        }
+
+        .search-input-section {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid var(--border-dark);
+            font-family: inherit;
+            font-size: 13px;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 1px var(--accent-blue);
+        }
+
+        .search-stats {
+            padding: 8px 16px;
+            background: var(--bg-header);
+            border-bottom: 1px solid var(--border-color);
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .search-results {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .search-result-row {
+            display: flex;
+            padding: 10px 16px;
+            border-bottom: 1px solid var(--border-color);
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .search-result-row:hover {
+            background: var(--row-hover);
+        }
+
+        .search-result-code {
+            min-width: 50px;
+            padding: 4px 8px;
+            background: var(--accent-blue);
+            color: white;
+            font-family: 'Consolas', monospace;
+            font-weight: 600;
+            font-size: 13px;
+            text-align: center;
+            border-radius: 2px;
+        }
+
+        .search-result-info {
+            flex: 1;
+        }
+
+        .search-result-category {
+            font-size: 11px;
+            color: var(--accent-blue);
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .search-result-desc {
+            color: var(--text-primary);
+            font-size: 13px;
+        }
+
+        mark {
+            background: #fff3cd;
+            padding: 0 2px;
+        }
+
+        .no-results {
+            padding: 40px;
+            text-align: center;
+            color: var(--text-muted);
+        }
+
+        /* Example buttons */
+        .examples-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            margin-top: 8px;
+        }
+
+        .examples-label {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .example-btn {
+            padding: 4px 10px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-white);
+            font-family: inherit;
+            font-size: 11px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            border-radius: 2px;
+        }
+
+        .example-btn:hover {
+            background: var(--accent-blue-light);
+            border-color: var(--accent-blue);
+            color: var(--accent-blue);
+        }
+
+        /* Status bar */
+        .status-bar {
+            background: #4a7c9b;
+            color: white;
+            padding: 6px 16px;
+            font-size: 11px;
+            display: flex;
+            justify-content: space-between;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="title-bar">
+            <div class="app-icon">A</div>
+            <span class="app-title">AAON RN Series Model String Parser</span>
+        </div>
+
+        <div class="model-string-bar">
+            <div class="model-string-input-wrapper">
+                <input type="text" class="model-string-input" id="model-input" 
+                       placeholder="Enter model string: RN-025-3-0-BB02-384:A000-D0B-DEH-0BA-0D0000L-00-00B00000B"
+                       oninput="parseModelString()">
+            </div>
+            <div class="examples-row">
+                <span class="examples-label">Examples:</span>
+                <button class="example-btn" onclick="loadExample('RN-025-3-0-BB02-384:A000-D0B-DEH-0BA-0D0000L-00-00B00000B')">25T Gas Heat</button>
+                <button class="example-btn" onclick="loadExample('RN-008-8-0-EA09-3LB:GEBE-U00-DHF-B00-00EA00F-00-00C0000VB')">8T ERU</button>
+                <button class="example-btn" onclick="loadExample('RN-010-3-0-B602-184:A000-D0B-DEH-0BA-0D0000L-00-00B00000B')">10T Heat Pump</button>
+            </div>
+        </div>
+
+        <div class="tabs-bar">
+            <button class="tab-btn active" onclick="switchTab('parse')">Parse Model String</button>
+            <button class="tab-btn" onclick="switchTab('search')">Reverse Search</button>
+        </div>
+
+        <div class="main-content">
+            <div class="parse-panel active" id="parse-panel">
+                <div class="sidebar">
+                    <div class="sidebar-header">Unit Details</div>
+                    <div id="sidebar-nav"></div>
+                </div>
+                <div class="results-panel">
+                    <div class="results-header">
+                        <span>Decoded Options</span>
+                        <span id="result-count"></span>
+                    </div>
+                    <table class="results-table">
+                        <thead>
+                            <tr>
+                                <th>Position</th>
+                                <th>Code</th>
+                                <th>Category</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody id="results-body"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="search-panel" id="search-panel">
+                <div class="search-input-section">
+                    <input type="text" class="search-input" id="search-input" 
+                           placeholder="Search for features: hot gas reheat, economizer, BACnet, VFD..."
+                           oninput="performSearch()">
+                </div>
+                <div class="search-stats" id="search-stats">Type to search all available codes and options</div>
+                <div class="search-results" id="search-results"></div>
+            </div>
+        </div>
+
+        <div class="status-bar">
+            <span id="status-text">Ready</span>
+            <span>AAON RN/RQ Series Reference Tool</span>
+        </div>
+    </div>
+
+    <script>
+        // Complete AAON RN Series Code Definitions
+        const codeDefinitions = {
+            GEN: {
+                name: "Generation",
+                position: "GEN",
+                group: "Model",
+                codes: {
+                    "RN": "Rooftop - Ninth Generation",
+                    "RQ": "Rooftop - Tenth Generation (Geothermal)"
+                }
+            },
+            SIZE: {
+                name: "Unit Size",
+                position: "SIZE",
+                group: "Model",
+                codes: {
+                    "006": "6 Ton", "007": "7 Ton", "008": "8 Ton", "009": "9 Ton",
+                    "010": "10 Ton", "011": "11 Ton", "013": "13 Ton", "014": "14 Ton",
+                    "015": "15 Ton", "016": "16 Ton", "018": "18 Ton", "020": "20 Ton",
+                    "025": "25 Ton", "030": "30 Ton", "055": "55 Ton", "065": "65 Ton",
+                    "075": "75 Ton", "090": "90 Ton", "105": "105 Ton", "120": "120 Ton",
+                    "130": "130 Ton", "140": "140 Ton"
+                }
+            },
+            VOLTAGE: {
+                name: "Voltage",
+                position: "VLT",
+                group: "Model",
+                codes: {
+                    "1": "230V/1Φ/60Hz",
+                    "2": "230V/3Φ/60Hz",
+                    "3": "460V/3Φ/60Hz",
+                    "4": "575V/3Φ/60Hz",
+                    "6": "380V/3Φ/50Hz",
+                    "8": "208V/3Φ/60Hz",
+                    "9": "208V/1Φ/60Hz"
+                }
+            },
+            INTERPROT: {
+                name: "Interior Protection",
+                position: "CONFIG",
+                group: "Model",
+                codes: {
+                    "0": "Standard - Vertical Discharge and Return",
+                    "A": "Interior Corrosion Protection - Vertical Discharge and Return"
+                }
+            },
+            A1: {
+                name: "Refrigerant Style",
+                position: "A1",
+                group: "Cooling",
+                codes: {
+                    "0": "Air Handling Unit",
+                    "B": "R-410A - High Efficiency",
+                    "E": "R-410A Variable Capacity Scroll Compressor - High Efficiency",
+                    "G": "R-410A Two-Stage Compressor - High Efficiency",
+                    "H": "R-410A Variable Capacity Scroll + Two-Stage Compressor - High Efficiency",
+                    "K": "R-410A Variable Speed Scroll Compressor - High Efficiency",
+                    "L": "R-410A VFD Compatible Tandem Compressors + Microchannel Condenser"
+                }
+            },
+            A2: {
+                name: "Unit Configuration",
+                position: "A2",
+                group: "Cooling",
+                codes: {
+                    "0": "No Cooling",
+                    "A": "Air-Cooled Condenser + Standard Evaporator Coil",
+                    "B": "Air-Cooled Condenser + 6 Row Evaporator Coil",
+                    "J": "Water-Cooled Condenser + Standard Evaporator Coil",
+                    "K": "Water-Cooled Condenser + 6 Row Evaporator Coil",
+                    "P": "Air-Cooled Condenser + 6 Row Evaporator Coil + Mixed Air Bypass",
+                    "Q": "Air-Cooled Condenser + 6 Row Evaporator Coil + Return Air Bypass",
+                    "R": "Water-Cooled Condenser + 6 Row Evaporator Coil + Return Air Bypass",
+                    "T": "Water-Cooled Condenser + 6 Row Evaporator Coil + Mixed Air Bypass",
+                    "U": "Chilled Water Coil - 4 Row",
+                    "W": "Chilled Water Coil - 6 Row",
+                    "2": "Non-Compressorized + Standard Evaporator Coil",
+                    "4": "Non-Compressorized + 6 Row Evaporator Coil",
+                    "6": "Air-Source Heat Pump",
+                    "7": "Water-Source/Geothermal Heat Pump"
+                }
+            },
+            A3: {
+                name: "Coil Coating",
+                position: "A3",
+                group: "Cooling",
+                codes: {
+                    "0": "Standard",
+                    "1": "Polymer E-Coated Evaporator and Condenser",
+                    "8": "Polymer E-Coated Condenser",
+                    "9": "Polymer E-Coated Cooling Coil"
+                }
+            },
+            A4: {
+                name: "Cooling/Heat Pump Staging",
+                position: "A4",
+                group: "Cooling",
+                codes: {
+                    "0": "No Cooling",
+                    "1": "1 Stage",
+                    "2": "2 Stage",
+                    "4": "4 Stage",
+                    "5": "5 Stage",
+                    "9": "Modulating - Lead VCC",
+                    "A": "Modulating - All VCC",
+                    "B": "1 Stage Heat Pump + 1 Stage Auxiliary Heat",
+                    "C": "2 Stage Heat Pump + 1 Stage Auxiliary Heat",
+                    "D": "4 Stage Heat Pump + 1 Stage Auxiliary Heat",
+                    "E": "Modulating Heat Pump - Lead VCC + 1 Stage Aux Heat",
+                    "F": "Modulating Heat Pump - All VCC + 1 Stage Aux Heat",
+                    "H": "Single Serpentine 8 fpi",
+                    "J": "Half Serpentine 8 fpi",
+                    "K": "Single Serpentine 10 fpi",
+                    "L": "Half Serpentine 10 fpi",
+                    "M": "Single Serpentine 12 fpi",
+                    "N": "Half Serpentine 12 fpi",
+                    "P": "1 Stage Heat Pump + 2 Stage Auxiliary Heat",
+                    "Q": "2 Stage Heat Pump + 2 Stage Auxiliary Heat",
+                    "R": "4 Stage Heat Pump + 2 Stage Auxiliary Heat",
+                    "S": "Modulating Heat Pump - Lead VCC + 2 Stage Aux Heat",
+                    "T": "Modulating Heat Pump - All VCC + 2 Stage Aux Heat",
+                    "U": "1 Stage Heat Pump + 4 Stage Auxiliary Heat",
+                    "V": "2 Stage Heat Pump + 4 Stage Auxiliary Heat",
+                    "W": "4 Stage Heat Pump + 4 Stage Auxiliary Heat",
+                    "Y": "Modulating Heat Pump - Lead VCC + 4 Stage Aux Heat",
+                    "Z": "Modulating Heat Pump - All VCC + 4 Stage Aux Heat"
+                }
+            },
+            B1: {
+                name: "Heating Type",
+                position: "B1",
+                group: "Heating",
+                codes: {
+                    "0": "No Heating",
+                    "1": "Electric Heat",
+                    "2": "Natural Gas Aluminized",
+                    "3": "Natural Gas Stainless Steel",
+                    "4": "High Altitude Natural Gas Aluminized",
+                    "5": "High Altitude Natural Gas Stainless Steel",
+                    "6": "LP Gas Aluminized",
+                    "7": "LP Gas Stainless Steel",
+                    "8": "High Altitude LP Gas Aluminized",
+                    "9": "High Altitude LP Gas Stainless Steel",
+                    "C": "Steam Distributing Standard",
+                    "D": "Steam Distributing Polymer E-Coated",
+                    "E": "Hot Water Standard",
+                    "F": "Hot Water Polymer E-Coated"
+                }
+            },
+            B2: {
+                name: "Heating Designation",
+                position: "B2",
+                group: "Heating",
+                codes: {
+                    "0": "No Heating",
+                    "1": "Heat 1", "2": "Heat 2", "3": "Heat 3", "4": "Heat 4",
+                    "6": "Heat 6", "7": "Heat 7", "8": "Heat 8", "9": "Heat 9",
+                    "A": "Heat A", "B": "Heat B", "C": "Heat C", "D": "Heat D",
+                    "E": "Heat E", "F": "Heat F", "G": "Heat G",
+                    "H": "1 Row Coil", "J": "2 Row Coil",
+                    "K": "Heat K", "L": "Heat L", "M": "Heat M", "N": "Heat N", "P": "Heat P"
+                }
+            },
+            B3: {
+                name: "Heating Staging",
+                position: "B3",
+                group: "Heating",
+                codes: {
+                    "0": "No Heating",
+                    "1": "1 Stage", "2": "2 Stage", "3": "3 Stage", "4": "4 Stage",
+                    "5": "5 Stage", "6": "6 Stage", "7": "7 Stage", "8": "8 Stage",
+                    "9": "Modulating Gas/SCR Electric",
+                    "A": "Modulating/SCR Electric, 0-10V Control Signal",
+                    "B": "High Turndown Modulating Gas",
+                    "H": "Single Serpentine 8 fpi",
+                    "J": "Half Serpentine 8 fpi",
+                    "K": "Single Serpentine 10 fpi",
+                    "L": "Half Serpentine 10 fpi",
+                    "M": "Single Serpentine 12 fpi",
+                    "N": "Half Serpentine 12 fpi"
+                }
+            },
+            F1A: {
+                name: "Return/Outside Air Section",
+                position: "1A",
+                group: "Features",
+                codes: {
+                    "0": "Manually Adjustable OA Opening + RA Opening",
+                    "A": "Economizer",
+                    "B": "Economizer + Power Exhaust",
+                    "C": "Economizer + Power Return",
+                    "D": "Economizer + PE - Discharge Damper Volume Control",
+                    "E": "Economizer + PE - Discharge Damper Volume Control + 0-10V External Control",
+                    "F": "Low CFM Total Energy Recovery Wheel",
+                    "G": "Low CFM Total ERW + Bypass",
+                    "H": "Low CFM Sensible ERW",
+                    "J": "Low CFM Sensible ERW + Bypass",
+                    "K": "100% Outside Air - No Return Air",
+                    "L": "Motorized Outside Air Damper + RA Opening",
+                    "M": "Motorized Outside Air Damper - No Return Air",
+                    "N": "Empty ERW Option Box - No Power Exhaust",
+                    "P": "Empty ERW Option Box + Power Exhaust",
+                    "Q": "1% Purge Low CFM Total ERW",
+                    "R": "1% Purge Low CFM Total ERW + Bypass",
+                    "S": "1% Purge Low CFM Sensible ERW",
+                    "T": "1% Purge Low CFM Sensible ERW + Bypass",
+                    "U": "High CFM Total ERW",
+                    "V": "High CFM Total ERW + Bypass",
+                    "W": "High CFM Sensible ERW",
+                    "Y": "High CFM Sensible ERW + Bypass",
+                    "Z": "1% Purge High CFM Total ERW",
+                    "1": "1% Purge High CFM Total ERW + Bypass",
+                    "2": "1% Purge High CFM Sensible ERW",
+                    "3": "1% Purge High CFM Sensible ERW + Bypass",
+                    "5": "100% Return Air"
+                }
+            },
+            F1B: {
+                name: "Return/Exhaust Blower Config",
+                position: "1B",
+                group: "Features",
+                codes: {
+                    "0": "Standard - None",
+                    "A": "1 Blower + Standard Efficiency Motor",
+                    "B": "2 Blowers + Standard Efficiency Motor",
+                    "C": "1 Blower + Premium Efficiency Motor",
+                    "D": "2 Blowers + Premium Efficiency Motors",
+                    "E": "1 Blower + Premium Efficiency Motor + 1 VFD",
+                    "F": "2 Blowers + Premium Efficiency Motors + 2 Motors on 1 VFD",
+                    "G": "2 Blowers + Premium Efficiency Motors + 2 Motors on 2 VFDs",
+                    "H": "1 Blower + Premium Efficiency TEFC Motor",
+                    "J": "2 Blowers + Premium Efficiency TEFC Motors",
+                    "K": "1 Blower + Premium Efficiency TEFC Motor + 1 VFD",
+                    "L": "2 Blowers + Premium Efficiency TEFC Motors + 2 Motors on 1 VFD",
+                    "M": "2 Blowers + Premium Efficiency TEFC Motors + 2 Motors on 2 VFDs",
+                    "N": "Option E + Shaft Grounding",
+                    "P": "Option F + Shaft Grounding",
+                    "Q": "Option G + Shaft Grounding",
+                    "R": "Option K + Shaft Grounding",
+                    "S": "Option L + Shaft Grounding",
+                    "T": "Option M + Shaft Grounding"
+                }
+            },
+            F1C: {
+                name: "Return/Exhaust Blower",
+                position: "1C",
+                group: "Features",
+                codes: {
+                    "0": "Standard - None",
+                    "A": "12\" x 9\" x 2 Forward Curved",
+                    "B": "15\" Backward Curved Plenum",
+                    "C": "18.5\" Backward Curved Plenum",
+                    "D": "22\" Backward Curved Plenum",
+                    "F": "27\" Backward Curved Plenum",
+                    "G": "22\" Direct Drive Axial Flow",
+                    "H": "35.5\" Direct Drive Axial Flow",
+                    "J": "15\" BC Plenum - 50% Width with Banding",
+                    "K": "18.5\" BC Plenum - 70% Width with Banding",
+                    "L": "22\" BC Plenum - 70% Width with Banding",
+                    "M": "27\" BC Plenum - 70% Width with Banding",
+                    "N": "30\" Backward Curved Plenum",
+                    "P": "42\" Direct Drive Axial Flow - 9 Blades",
+                    "Q": "42\" Direct Drive Axial Flow - 12 Blades",
+                    "R": "24\" Backward Curved Plenum",
+                    "S": "33\" Backward Curved Plenum",
+                    "T": "12\" x 9\" x 1 Forward Curved"
+                }
+            },
+            F1D: {
+                name: "Return/Exhaust Blower Motor",
+                position: "1D",
+                group: "Features",
+                codes: {
+                    "0": "Standard - None",
+                    "C": "1 hp - 1760 rpm", "D": "2 hp - 1760 rpm", "E": "3 hp - 1760 rpm",
+                    "F": "5 hp - 1760 rpm", "G": "7.5 hp - 1760 rpm", "H": "10 hp - 1760 rpm",
+                    "L": "15 hp - 1760 rpm", "M": "20 hp - 1760 rpm",
+                    "N": "1 hp - 1170 rpm", "P": "2 hp - 1170 rpm", "Q": "3 hp - 1170 rpm",
+                    "R": "5 hp - 1170 rpm", "S": "7.5 hp - 1170 rpm", "T": "10 hp - 1170 rpm",
+                    "U": "15 hp - 1170 rpm", "V": "20 hp - 1170 rpm",
+                    "3": "25 hp - 1760 rpm", "4": "30 hp - 1760 rpm",
+                    "5": "40 hp - 1760 rpm", "6": "50 hp - 1760 rpm"
+                }
+            },
+            F2: {
+                name: "Outside Air Control",
+                position: "2",
+                group: "Features",
+                codes: {
+                    "0": "Standard - None",
+                    "C": "Fully Modulating Actuator - Sensible Limit",
+                    "D": "Fully Modulating Actuator - Enthalpy Limit",
+                    "E": "DDC Actuator",
+                    "P": "Fully Mod. Actuator - Sensible + CO2 Override",
+                    "Q": "Fully Mod. Actuator - Enthalpy + CO2 Override",
+                    "R": "DDC Actuator + CO2 Override",
+                    "U": "2 Position Actuator",
+                    "Y": "Fault Detection and Diagnostics Controller (FDD) Sensible Limit",
+                    "Z": "FDD Enthalpy Limit",
+                    "1": "FDD Sensible Limit + CO2 Override",
+                    "2": "FDD Enthalpy Limit + CO2 Override"
+                }
+            },
+            F3: {
+                name: "Heat Options",
+                position: "3",
+                group: "Features",
+                codes: {
+                    "0": "Standard - None",
+                    "E": "Discharge Air Override",
+                    "K": "Auxiliary Heat K", "L": "Auxiliary Heat L", "M": "Auxiliary Heat M",
+                    "N": "Auxiliary Heat N", "P": "Auxiliary Heat P", "Q": "Auxiliary Heat Q",
+                    "R": "Auxiliary Heat R", "S": "Auxiliary Heat S", "T": "Auxiliary Heat T",
+                    "U": "Auxiliary Heat U", "V": "Auxiliary Heat V", "W": "Auxiliary Heat W"
+                }
+            },
+            F4: {
+                name: "Maintenance Options",
+                position: "4",
+                group: "Features",
+                codes: {
+                    "0": "Standard - None",
+                    "A": "Field Wired 115V Outlet",
+                    "B": "Factory Wired 115V Outlet",
+                    "C": "Blower Aux. Contact",
+                    "D": "Remote Start/Stop Terminals",
+                    "E": "Options A + C",
+                    "F": "Options A + D",
+                    "G": "Options B + C",
+                    "H": "Options B + D",
+                    "J": "Options A + C + D",
+                    "K": "Options B + C + D",
+                    "L": "Options C + D"
+                }
+            },
+            F5A: {
+                name: "Supply Blower Config",
+                position: "5A",
+                group: "Features",
+                codes: {
+                    "0": "1 Blower + Standard Efficiency Motor",
+                    "A": "2 Blowers + Standard Efficiency Motor",
+                    "B": "1 Blower + Premium Efficiency Motor",
+                    "C": "2 Blowers + Premium Efficiency Motor",
+                    "D": "1 Blower + Premium Efficiency Motor + 1 VFD",
+                    "F": "2 Blowers + Premium Efficiency Motors + 2 Motors on 1 VFD",
+                    "G": "2 Blowers + Premium Efficiency Motors + 2 Motors on 2 VFDs",
+                    "H": "1 Blower + Premium Efficiency TEFC Motor",
+                    "J": "2 Blowers + Premium Efficiency TEFC Motors",
+                    "K": "1 Blower + Premium Efficiency TEFC Motor + 1 VFD",
+                    "L": "2 Blowers + Premium Efficiency TEFC Motors + 2 Motors on 1 VFD",
+                    "M": "2 Blowers + Premium Efficiency TEFC Motors + 2 Motors on 2 VFDs",
+                    "N": "Option D + Shaft Grounding",
+                    "P": "Option F + Shaft Grounding",
+                    "Q": "Option G + Shaft Grounding",
+                    "R": "Option K + Shaft Grounding",
+                    "S": "Option L + Shaft Grounding",
+                    "T": "Option M + Shaft Grounding"
+                }
+            },
+            F5B: {
+                name: "Supply Air Blower",
+                position: "5B",
+                group: "Features",
+                codes: {
+                    "B": "15\" Backward Curved Plenum",
+                    "C": "18.5\" Backward Curved Plenum",
+                    "D": "24\" Backward Curved Plenum",
+                    "E": "27\" Backward Curved Plenum",
+                    "F": "30\" BC Plenum - 90% Width + 1750 rpm Max - Aluminum Wheel",
+                    "G": "15\" BC Plenum - 70% Width",
+                    "H": "18.5\" BC Plenum - 70% Width",
+                    "M": "13.5\" Backward Curved Plenum",
+                    "N": "13.5\" BC Plenum - 70% Width",
+                    "P": "24\" BC Plenum - 60% Width",
+                    "Q": "27\" BC Plenum - 60% Width",
+                    "R": "22\" Backward Curved Plenum",
+                    "S": "22\" BC Plenum - 70% Width",
+                    "T": "17\" Backward Curved Plenum",
+                    "U": "17\" BC Plenum - 70% Width",
+                    "V": "33\" Backward Curved Plenum",
+                    "W": "36.5\" Backward Curved Plenum",
+                    "Y": "42.5\" Backward Curved Plenum"
+                }
+            },
+            F5C: {
+                name: "Supply Blower Motor",
+                position: "5C",
+                group: "Features",
+                codes: {
+                    "C": "1 hp - 1760 rpm", "D": "2 hp - 1760 rpm", "E": "3 hp - 1760 rpm",
+                    "F": "5 hp - 1760 rpm", "G": "7.5 hp - 1760 rpm", "H": "10 hp - 1760 rpm",
+                    "L": "15 hp - 1760 rpm", "M": "20 hp - 1760 rpm",
+                    "N": "1 hp - 1170 rpm", "P": "2 hp - 1170 rpm", "Q": "3 hp - 1170 rpm",
+                    "R": "5 hp - 1170 rpm", "S": "7.5 hp - 1170 rpm", "T": "10 hp - 1170 rpm",
+                    "U": "15 hp - 1170 rpm", "V": "20 hp - 1170 rpm",
+                    "W": "25 hp - 1170 rpm", "Y": "30 hp - 1170 rpm",
+                    "3": "25 hp - 1760 rpm", "4": "30 hp - 1760 rpm",
+                    "5": "40 hp - 1760 rpm", "6": "50 hp - 1760 rpm"
+                }
+            },
+            F6A: {
+                name: "Pre Filter",
+                position: "6A",
+                group: "Features",
+                codes: {
+                    "0": "Standard - None",
+                    "A": "2\" Pleated - MERV 8",
+                    "B": "Metal Mesh Outside Air Filter",
+                    "C": "Lint Screen Filter",
+                    "D": "Exhaust Air ERW Filter",
+                    "E": "Options A + B",
+                    "F": "Options A + D",
+                    "G": "Options B + D",
+                    "H": "Options A + B + D"
+                }
+            },
+            F6B: {
+                name: "Unit Filter",
+                position: "6B",
+                group: "Features",
+                codes: {
+                    "0": "2\" Pleated - MERV 8",
+                    "B": "4\" Pleated - MERV 8",
+                    "C": "2\" Permanent Filter + Replaceable Media",
+                    "F": "4\" Pleated - MERV 11",
+                    "G": "4\" Pleated - MERV 13",
+                    "H": "4\" Pleated - MERV 14"
+                }
+            },
+            F6C: {
+                name: "Filter Options",
+                position: "6C",
+                group: "Features",
+                codes: {
+                    "0": "Standard",
+                    "A": "Clogged Filter Switch",
+                    "B": "Magnehelic Gauge",
+                    "C": "Options A + B"
+                }
+            },
+            F7: {
+                name: "Refrigeration Control",
+                position: "7",
+                group: "Features",
+                codes: {
+                    "0": "Standard",
+                    "A": "5 Min. Time Delay Relay - Comp. Off",
+                    "B": "20 Sec. Time Delay Relay - Comp. Staging",
+                    "C": "Adjustable Fan Cycling",
+                    "D": "Adjustable Compressor Lockout",
+                    "E": "Freeze Stats - Each Circuit",
+                    "F": "Options A + B",
+                    "G": "Options A + C",
+                    "H": "Options A + D",
+                    "J": "Options A + E",
+                    "K": "Options B + C",
+                    "L": "Options B + D",
+                    "M": "Options B + E",
+                    "N": "Adjustable Fan Cycling with Adjustable Compressor Lockout",
+                    "P": "Options C + E",
+                    "Q": "Options D + E",
+                    "R": "Options A + B + C",
+                    "S": "Options A + B + D",
+                    "T": "Options A + B + E",
+                    "U": "Options A + N",
+                    "V": "Options A + C + E",
+                    "W": "Options A + D + E",
+                    "Y": "Options B + N",
+                    "Z": "Options B + C + E",
+                    "1": "Options B + D + E",
+                    "2": "Options N + E",
+                    "3": "Options A + B + N",
+                    "4": "Options A + B + C + E",
+                    "5": "Options A + B + D + E",
+                    "6": "Options A + N + E",
+                    "7": "Options B + N + E",
+                    "8": "Options A + B + N + E"
+                }
+            },
+            F8: {
+                name: "Refrigeration Options",
+                position: "8",
+                group: "Features",
+                codes: {
+                    "0": "Standard",
+                    "A": "Hot Gas Bypass Lead Stage or Hot Gas Bypass Lag Stage with Lead Variable Capacity Compressor",
+                    "B": "Hot Gas Bypass Lead and Lag Stages",
+                    "D": "Modulating Hot Gas Reheat",
+                    "E": "0°F Low Ambient Lead Stage",
+                    "H": "Options A + D (Hot Gas Bypass + Modulating Hot Gas Reheat)",
+                    "J": "Options B + D (Hot Gas Bypass Both Stages + Modulating Hot Gas Reheat)",
+                    "K": "Options A + E",
+                    "L": "Options B + E",
+                    "N": "Polymer E-Coated Modulating Hot Gas Reheat",
+                    "R": "Options A + N",
+                    "S": "Options B + N",
+                    "T": "Parallel Modulating Hot Gas Reheat Microchannel Coil - Lag Circuit",
+                    "U": "Options A + T",
+                    "V": "Options B + T",
+                    "W": "Polymer E-Coated Parallel Modulating Hot Gas Reheat Microchannel Coil - Lag Circuit",
+                    "Y": "Options A + W",
+                    "Z": "Options B + W",
+                    "1": "All Circuit Parallel Modulating Hot Gas Reheat Microchannel Coil",
+                    "2": "Options A + 1",
+                    "3": "Options B + 1",
+                    "4": "Polymer E-Coated All Circuit Parallel Modulating Hot Gas Reheat Microchannel Coil",
+                    "5": "Options A + 4",
+                    "6": "Options B + 4"
+                }
+            },
+            F9: {
+                name: "Refrigeration Accessories",
+                position: "9",
+                group: "Features",
+                codes: {
+                    "0": "Standard",
+                    "A": "Sight Glass",
+                    "B": "Compressor Isolation Valves",
+                    "C": "Options A + B",
+                    "E": "ECM Condenser Fan - Head Pressure Control",
+                    "F": "VFD Controlled Condenser Fans - Variable Speed",
+                    "K": "Options A + E",
+                    "L": "Options B + E",
+                    "M": "Options A + B + E",
+                    "N": "Options A + F",
+                    "P": "Options B + F",
+                    "Q": "Options C + F",
+                    "T": "Options R + B",
+                    "U": "Options R + A + B"
+                }
+            },
+            F10: {
+                name: "Power Options",
+                position: "10",
+                group: "Features",
+                codes: {
+                    "0": "Standard Power Block",
+                    "A": "100 Amp Power Switch",
+                    "B": "150 Amp Power Switch",
+                    "C": "225 Amp Power Switch",
+                    "D": "400 Amp Power Switch",
+                    "E": "600 Amp Power Switch",
+                    "F": "60 Amp Power Switch",
+                    "5": "800 Amp Power Switch",
+                    "6": "1200 Amp Power Switch",
+                    "G": "15 Amp Circuit Breaker",
+                    "H": "20 Amp Circuit Breaker",
+                    "J": "25 Amp Circuit Breaker",
+                    "K": "30 Amp Circuit Breaker",
+                    "L": "35 Amp Circuit Breaker",
+                    "M": "40 Amp Circuit Breaker",
+                    "N": "45 Amp Circuit Breaker",
+                    "P": "50 Amp Circuit Breaker",
+                    "Q": "60 Amp Circuit Breaker",
+                    "R": "70 Amp Circuit Breaker",
+                    "S": "80 Amp Circuit Breaker",
+                    "T": "90 Amp Circuit Breaker",
+                    "U": "100 Amp Circuit Breaker",
+                    "V": "110 Amp Circuit Breaker",
+                    "W": "125 Amp Circuit Breaker",
+                    "Y": "150 Amp Circuit Breaker",
+                    "Z": "175 Amp Circuit Breaker",
+                    "1": "200 Amp Circuit Breaker",
+                    "2": "225 Amp Circuit Breaker",
+                    "3": "250 Amp Circuit Breaker"
+                }
+            },
+            F11: {
+                name: "Safety Options",
+                position: "11",
+                group: "Features",
+                codes: {
+                    "0": "Standard",
+                    "A": "Return and Supply Air Firestat",
+                    "B": "Return Air Smoke Detector",
+                    "C": "Supply Air Smoke Detector",
+                    "D": "Options B + C",
+                    "E": "Options A + B",
+                    "F": "Options A + C",
+                    "G": "Options A + B + C",
+                    "H": "Remote Smoke Detector Terminals",
+                    "J": "Options A + H",
+                    "K": "Options B + H",
+                    "L": "Options C + H",
+                    "M": "Options D + H",
+                    "N": "Options A + B + H",
+                    "P": "Options A + C + H",
+                    "Q": "Options A + B + C + H",
+                    "R": "High Condensate Level Switch",
+                    "S": "Options A + R",
+                    "T": "Options B + R",
+                    "U": "Options C + R",
+                    "V": "Options D + R",
+                    "W": "Options H + R",
+                    "Y": "Options E + R",
+                    "Z": "Options F + R",
+                    "1": "Options G + R",
+                    "2": "Options J + R",
+                    "3": "Options K + R",
+                    "4": "Options L + R",
+                    "5": "Options M + R",
+                    "6": "Options N + R",
+                    "7": "Options P + R",
+                    "8": "Options Q + R"
+                }
+            },
+            F12: {
+                name: "Controls",
+                position: "12",
+                group: "Features",
+                codes: {
+                    "0": "Standard",
+                    "A": "Low Limit Controls",
+                    "B": "Phase and Brown Out Protection",
+                    "C": "Energy Recovery Wheel Defrost",
+                    "D": "Energy Recovery Wheel Rotation Detection",
+                    "E": "Compressor Power Factor Correction",
+                    "F": "Options A + B",
+                    "G": "Options A + C",
+                    "H": "Options A + D",
+                    "J": "Options A + E",
+                    "K": "Options B + C",
+                    "L": "Options B + D",
+                    "M": "Options B + E",
+                    "N": "Options C + D",
+                    "P": "Options C + E",
+                    "Q": "Options D + E",
+                    "R": "Options A + B + C",
+                    "S": "Options A + B + D",
+                    "T": "Options A + B + E",
+                    "U": "Options A + C + D",
+                    "V": "Options A + C + E",
+                    "W": "Options A + D + E",
+                    "Y": "Options B + C + D",
+                    "Z": "Options B + C + E",
+                    "1": "Options B + D + E",
+                    "2": "Options C + D + E",
+                    "3": "Options A + B + C + D",
+                    "4": "Options A + B + C + E",
+                    "5": "Options A + B + D + E",
+                    "6": "Options A + C + D + E",
+                    "7": "Options B + C + D + E",
+                    "8": "Options A + B + C + D + E"
+                }
+            },
+            F13: {
+                name: "Special Controls",
+                position: "13",
+                group: "Features",
+                codes: {
+                    "0": "Terminal Block for Thermostat Control",
+                    "D": "VAV Unit Controller - VAV Cool + CV Heat",
+                    "E": "Constant Volume Unit Controller - CV Cool + CV Heat",
+                    "F": "Makeup Air Unit Controller - CV Cool + CV Heat",
+                    "L": "Terminal Block for Thermostat Control with Isolation Relays",
+                    "U": "Digital Precise Air Controller, D-PAC",
+                    "V": "Precise Air Controller, PAC",
+                    "Y": "Single Zone VAV Heat Pump Unit Controller - VAV Cool + VAV Heat",
+                    "Z": "Constant Volume Heat Pump Unit Controller - CV Cool + CV Heat",
+                    "1": "Makeup Air Heat Pump Unit Controller - CV Cool + CV Heat",
+                    "2": "Single Zone VAV Unit Controller VAV Cool + CV Heat",
+                    "3": "Single Zone VAV Unit Controller VAV Cool + VAV Heat",
+                    "4": "Field Installed DDC Controls by Others",
+                    "5": "Field Installed DDC Controls Furnished by Others with Isolation Relays",
+                    "6": "Factory Installed DDC Controls Furnished by Others with Isolation Relays (SPA)"
+                }
+            },
+            F14A: {
+                name: "Preheat Type",
+                position: "14A",
+                group: "Features",
+                codes: {
+                    "0": "Standard - None",
+                    "A": "Steam Distributing Preheat Coil - 1 Row",
+                    "B": "Steam Distributing Preheat Coil - 2 Row",
+                    "C": "Hot Water Preheat Coil - 1 Row",
+                    "D": "Hot Water Preheat Coil - 2 Row",
+                    "E": "Modulating Electric Preheat",
+                    "F": "Outside Airflow Monitoring Size A",
+                    "G": "Outside Airflow Monitoring Size B",
+                    "H": "Outside Airflow Monitoring Size C",
+                    "J": "Outside Airflow Monitoring Size D"
+                }
+            },
+            F14B: {
+                name: "Preheat Sizing",
+                position: "14B",
+                group: "Features",
+                codes: {
+                    "0": "Standard - None",
+                    "A": "Single Serpentine 8 fpi",
+                    "B": "Half Serpentine 8 fpi",
+                    "C": "Single Serpentine 10 fpi",
+                    "D": "Half Serpentine 10 fpi",
+                    "E": "Single Serpentine 12 fpi",
+                    "F": "Half Serpentine 12 fpi",
+                    "G": "10 kW (7.5 kW @ 208V)",
+                    "H": "15 kW (11.3 kW @ 208V)",
+                    "J": "20 kW (15 kW @ 208V)",
+                    "K": "30 kW (22.5 kW @ 208V)",
+                    "L": "40 kW (30 kW @ 208V)",
+                    "M": "50 kW (37.6 kW @ 208V)",
+                    "N": "60 kW (45.1 kW @ 208V)",
+                    "P": "70 kW (52.6 kW @ 208V)",
+                    "Q": "80 kW (60.1 kW @ 208V)",
+                    "R": "90 kW (67.6 kW @ 208V)",
+                    "S": "100 kW (75.1 kW @ 208V)",
+                    "T": "110 kW (82.6 kW @ 208V)",
+                    "U": "120 kW (90.1 kW @ 208V)"
+                }
+            },
+            F15: {
+                name: "Glycol Percentage",
+                position: "15",
+                group: "Features",
+                codes: {
+                    "0": "Water or No WSHP with Polymer Energy Recovery Wheel",
+                    "C": "Field Adjustable for Glycol %",
+                    "D": "Water or No WSHP with Aluminum Energy Recovery Wheel",
+                    "E": "Field Adjustable Glycol % with Aluminum Energy Recovery Wheel"
+                }
+            },
+            F16: {
+                name: "Interior Cabinet Options",
+                position: "16",
+                group: "Features",
+                codes: {
+                    "0": "Standard",
+                    "B": "Control Panel Service Lights",
+                    "H": "UV Lights",
+                    "J": "Compressor Sound Blanket (CSB)",
+                    "K": "Control Panel Service Lights + UV Lights",
+                    "L": "Control Panel Service Lights + CSB",
+                    "M": "UV Lights + CSB",
+                    "N": "Control Panel Service Lights + UV Lights + CSB"
+                }
+            },
+            F17: {
+                name: "Exterior Cabinet Options",
+                position: "17",
+                group: "Features",
+                codes: {
+                    "0": "Standard",
+                    "A": "Base Insulation",
+                    "B": "Burglar Bars",
+                    "C": "Condenser Coil Guards (or Screen)",
+                    "D": "Options A + B",
+                    "E": "Options A + C",
+                    "F": "Options B + C",
+                    "G": "Options A + B + C",
+                    "H": "Motorized Relief Dampers",
+                    "J": "Options A + H",
+                    "K": "Options B + H",
+                    "L": "Options C + H",
+                    "M": "Options A + B + H",
+                    "N": "Options A + C + H",
+                    "P": "Options B + C + H",
+                    "Q": "Options A + B + C + H"
+                }
+            },
+            F18: {
+                name: "Electrical Rating",
+                position: "18",
+                group: "Features",
+                codes: {
+                    "0": "Standard - 5 kAIC",
+                    "1": "10 kAIC",
+                    "2": "35 kAIC",
+                    "3": "65 kAIC"
+                }
+            },
+            F19: {
+                name: "Code Options",
+                position: "19",
+                group: "Features",
+                codes: {
+                    "0": "Standard - ETL U.S.A. Listing",
+                    "B": "Chicago - Cool + Gas",
+                    "C": "Chicago - Cool + Electric Heat",
+                    "D": "Chicago - Cool Only",
+                    "E": "Chicago - Gas Only",
+                    "F": "Chicago - Electric Heat Only",
+                    "G": "Chicago - No Cool + No Heat",
+                    "H": "ETL U.S.A. + Canada Listing",
+                    "K": "California OSHPD Certification",
+                    "L": "Shake Table Cert. (ASCE 7-05/ICC-ES AC 156)",
+                    "M": "Seismic Construction (Non-Certified)",
+                    "N": "California OSHPD Certification + Chicago",
+                    "P": "Shake Table Cert. (ASCE 7-05/ICC-ES AC 156) + Chicago",
+                    "Q": "Seismic Construction (Non-Certified) + Chicago"
+                }
+            },
+            F20: {
+                name: "Crating",
+                position: "20",
+                group: "Features",
+                codes: {
+                    "0": "Standard",
+                    "A": "Export Crating",
+                    "B": "Export Crating - No Condenser Section",
+                    "C": "Shrink Wrap",
+                    "D": "Options A + C",
+                    "E": "Options B + C"
+                }
+            },
+            F21: {
+                name: "Water-Cooled Condenser",
+                position: "21",
+                group: "Features",
+                codes: {
+                    "0": "Standard - None",
+                    "A": "Balancing Valves",
+                    "B": "Water Flow Switch",
+                    "C": "Motorized Shut-off Valve",
+                    "D": "Head Pressure Control Valve",
+                    "E": "Options A + B",
+                    "F": "Options A + C",
+                    "G": "Options A + D",
+                    "H": "Options B + C",
+                    "J": "Options B + D",
+                    "L": "Options A + B + C",
+                    "M": "Options A + B + D"
+                }
+            },
+            F22: {
+                name: "Control Vendors",
+                position: "22",
+                group: "Features",
+                codes: {
+                    "0": "None",
+                    "V": "VCC-X Controls System + Integrated BACnet MSTP",
+                    "W": "VCC-X Controls System + Integrated BACnet MSTP with Specials"
+                }
+            },
+            F23: {
+                name: "Type",
+                position: "23",
+                group: "Features",
+                codes: {
+                    "B": "Standard - AAON Gray Paint",
+                    "U": "Special Pricing Authorization + Special Paint",
+                    "X": "Special Pricing Authorization + AAON Gray Paint",
+                    "1": "Standard Paint + 2 Year Parts Only Warranty",
+                    "4": "Standard Paint + 5 Year Parts Only Warranty",
+                    "9": "Standard Paint + 10 Year Parts Only Warranty"
+                }
+            }
+        };
+
+        // Navigation structure matching AAON app
+        const navStructure = [
+            { key: 'GEN', name: 'Generation', indent: false },
+            { key: 'SIZE', name: 'Unit Size', indent: false },
+            { key: 'VOLTAGE', name: 'Voltage', indent: false },
+            { key: 'INTERPROT', name: 'Interior Protection', indent: false },
+            { key: 'A1', name: 'Refrigerant Style', indent: true },
+            { key: 'A2', name: 'Unit Configuration', indent: true },
+            { key: 'A3', name: 'Coil Coating', indent: true },
+            { key: 'A4', name: 'Cooling/Heat Pump Staging', indent: true },
+            { key: 'B1', name: 'Heating Type', indent: true },
+            { key: 'B2', name: 'Heating Designation', indent: true },
+            { key: 'B3', name: 'Heating Staging', indent: true },
+        ];
+
+        const featureNavStructure = [
+            { key: 'F1A', name: 'Return/Outside Air Section', indent: true },
+            { key: 'F1B', name: 'Return/Exhaust Blower Config', indent: true },
+            { key: 'F1C', name: 'Return/Exhaust Blower', indent: true },
+            { key: 'F1D', name: 'Return/Exhaust Blower Motor', indent: true },
+            { key: 'F2', name: 'Outside Air Control', indent: true },
+            { key: 'F3', name: 'Heat Options', indent: true },
+            { key: 'F4', name: 'Maintenance Options', indent: true },
+            { key: 'F5A', name: 'Supply Blower Config', indent: true },
+            { key: 'F5B', name: 'Supply Air Blower', indent: true },
+            { key: 'F5C', name: 'Supply Blower Motor', indent: true },
+            { key: 'F6A', name: 'Pre Filter', indent: true },
+            { key: 'F6B', name: 'Unit Filter', indent: true },
+            { key: 'F6C', name: 'Filter Options', indent: true },
+            { key: 'F7', name: 'Refrigeration Control', indent: true },
+            { key: 'F8', name: 'Refrigeration Options', indent: true },
+            { key: 'F9', name: 'Refrigeration Accessories', indent: true },
+            { key: 'F10', name: 'Power Options', indent: true },
+            { key: 'F11', name: 'Safety Options', indent: true },
+            { key: 'F12', name: 'Controls', indent: true },
+            { key: 'F13', name: 'Special Controls', indent: true },
+            { key: 'F14A', name: 'Preheat Type', indent: true },
+            { key: 'F14B', name: 'Preheat Sizing', indent: true },
+            { key: 'F15', name: 'Glycol Percentage', indent: true },
+            { key: 'F16', name: 'Interior Cabinet Options', indent: true },
+            { key: 'F17', name: 'Exterior Cabinet Options', indent: true },
+            { key: 'F18', name: 'Electrical Rating', indent: true },
+            { key: 'F19', name: 'Code Options', indent: true },
+            { key: 'F20', name: 'Crating', indent: true },
+            { key: 'F21', name: 'Water-Cooled Condenser', indent: true },
+            { key: 'F22', name: 'Control Vendors', indent: true },
+            { key: 'F23', name: 'Type', indent: true },
+        ];
+
+        let currentResults = [];
+
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
+            document.getElementById('parse-panel').classList.remove('active');
+            document.getElementById('search-panel').classList.remove('active');
+            
+            if (tab === 'parse') {
+                document.querySelector('.tab-btn:first-child').classList.add('active');
+                document.getElementById('parse-panel').classList.add('active');
+            } else {
+                document.querySelector('.tab-btn:last-child').classList.add('active');
+                document.getElementById('search-panel').classList.add('active');
+            }
+        }
+
+        function loadExample(example) {
+            document.getElementById('model-input').value = example;
+            parseModelString();
+        }
+
+        function buildSidebar(results) {
+            const nav = document.getElementById('sidebar-nav');
+            const resultKeys = results.map(r => r.category);
+            
+            let html = '<div class="nav-section"><div class="nav-section-title">Model Options</div>';
+            
+            navStructure.forEach(item => {
+                const isActive = resultKeys.includes(item.key);
+                html += `<div class="nav-item ${item.indent ? 'child' : ''} ${isActive ? 'active' : ''}" onclick="scrollToRow('${item.key}')">
+                    <span class="nav-item-code">${codeDefinitions[item.key]?.position || item.key}</span>
+                    <span class="nav-item-name">${item.name}</span>
+                </div>`;
+            });
+            
+            html += '</div><div class="nav-section"><div class="nav-section-title">Feature Options</div>';
+            
+            featureNavStructure.forEach(item => {
+                const isActive = resultKeys.includes(item.key);
+                html += `<div class="nav-item ${item.indent ? 'child' : ''} ${isActive ? 'active' : ''}" onclick="scrollToRow('${item.key}')">
+                    <span class="nav-item-code">${codeDefinitions[item.key]?.position || item.key}</span>
+                    <span class="nav-item-name">${item.name}</span>
+                </div>`;
+            });
+            
+            html += '</div>';
+            nav.innerHTML = html;
+        }
+
+        function scrollToRow(key) {
+            const row = document.querySelector(`tr[data-key="${key}"]`);
+            if (row) {
+                row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                row.style.background = '#fff3cd';
+                setTimeout(() => row.style.background = '', 1500);
+            }
+        }
+
+        function parseModelString() {
+            const input = document.getElementById('model-input').value.toUpperCase().trim();
+            const resultsBody = document.getElementById('results-body');
+            const resultCount = document.getElementById('result-count');
+            
+            if (!input) {
+                resultsBody.innerHTML = '<tr><td colspan="4" class="no-results">Enter a model string to decode</td></tr>';
+                buildSidebar([]);
+                resultCount.textContent = '';
+                document.getElementById('status-text').textContent = 'Ready';
+                return;
+            }
+
+            const normalized = input.replace(/[–—]/g, '-');
+            const [modelPart, featurePart] = normalized.split(':');
+            
+            if (!modelPart) {
+                resultsBody.innerHTML = '<tr><td colspan="4" class="no-results">Invalid model string format</td></tr>';
+                return;
+            }
+
+            const results = [];
+            const modelSegments = modelPart.split('-').filter(s => s);
+            
+            if (modelSegments.length >= 1) {
+                results.push({ category: 'GEN', code: modelSegments[0], ...lookup('GEN', modelSegments[0]) });
+            }
+            if (modelSegments.length >= 2) {
+                const size = modelSegments[1].padStart(3, '0');
+                results.push({ category: 'SIZE', code: size, ...lookup('SIZE', size) });
+            }
+            if (modelSegments.length >= 3) {
+                results.push({ category: 'VOLTAGE', code: modelSegments[2], ...lookup('VOLTAGE', modelSegments[2]) });
+            }
+            if (modelSegments.length >= 4) {
+                results.push({ category: 'INTERPROT', code: modelSegments[3], ...lookup('INTERPROT', modelSegments[3]) });
+            }
+            if (modelSegments.length >= 5) {
+                const coolingOpts = modelSegments[4];
+                if (coolingOpts.length >= 1) results.push({ category: 'A1', code: coolingOpts[0], ...lookup('A1', coolingOpts[0]) });
+                if (coolingOpts.length >= 2) results.push({ category: 'A2', code: coolingOpts[1], ...lookup('A2', coolingOpts[1]) });
+                if (coolingOpts.length >= 3) results.push({ category: 'A3', code: coolingOpts[2], ...lookup('A3', coolingOpts[2]) });
+                if (coolingOpts.length >= 4) results.push({ category: 'A4', code: coolingOpts[3], ...lookup('A4', coolingOpts[3]) });
+            }
+            if (modelSegments.length >= 6) {
+                const heatingOpts = modelSegments[5];
+                if (heatingOpts.length >= 1) results.push({ category: 'B1', code: heatingOpts[0], ...lookup('B1', heatingOpts[0]) });
+                if (heatingOpts.length >= 2) results.push({ category: 'B2', code: heatingOpts[1], ...lookup('B2', heatingOpts[1]) });
+                if (heatingOpts.length >= 3) results.push({ category: 'B3', code: heatingOpts[2], ...lookup('B3', heatingOpts[2]) });
+            }
+
+            if (featurePart) {
+                const featureSegments = featurePart.split('-').filter(s => s);
+                
+                if (featureSegments[0] && featureSegments[0].length >= 4) {
+                    const seg = featureSegments[0];
+                    results.push({ category: 'F1A', code: seg[0], ...lookup('F1A', seg[0]) });
+                    results.push({ category: 'F1B', code: seg[1], ...lookup('F1B', seg[1]) });
+                    results.push({ category: 'F1C', code: seg[2], ...lookup('F1C', seg[2]) });
+                    results.push({ category: 'F1D', code: seg[3], ...lookup('F1D', seg[3]) });
+                }
+                if (featureSegments[1] && featureSegments[1].length >= 3) {
+                    const seg = featureSegments[1];
+                    results.push({ category: 'F2', code: seg[0], ...lookup('F2', seg[0]) });
+                    results.push({ category: 'F3', code: seg[1], ...lookup('F3', seg[1]) });
+                    results.push({ category: 'F4', code: seg[2], ...lookup('F4', seg[2]) });
+                }
+                if (featureSegments[2] && featureSegments[2].length >= 3) {
+                    const seg = featureSegments[2];
+                    results.push({ category: 'F5A', code: seg[0], ...lookup('F5A', seg[0]) });
+                    results.push({ category: 'F5B', code: seg[1], ...lookup('F5B', seg[1]) });
+                    results.push({ category: 'F5C', code: seg[2], ...lookup('F5C', seg[2]) });
+                }
+                if (featureSegments[3] && featureSegments[3].length >= 3) {
+                    const seg = featureSegments[3];
+                    results.push({ category: 'F6A', code: seg[0], ...lookup('F6A', seg[0]) });
+                    results.push({ category: 'F6B', code: seg[1], ...lookup('F6B', seg[1]) });
+                    results.push({ category: 'F6C', code: seg[2], ...lookup('F6C', seg[2]) });
+                }
+                if (featureSegments[4] && featureSegments[4].length >= 7) {
+                    const seg = featureSegments[4];
+                    results.push({ category: 'F7', code: seg[0], ...lookup('F7', seg[0]) });
+                    results.push({ category: 'F8', code: seg[1], ...lookup('F8', seg[1]) });
+                    results.push({ category: 'F9', code: seg[2], ...lookup('F9', seg[2]) });
+                    results.push({ category: 'F10', code: seg[3], ...lookup('F10', seg[3]) });
+                    results.push({ category: 'F11', code: seg[4], ...lookup('F11', seg[4]) });
+                    results.push({ category: 'F12', code: seg[5], ...lookup('F12', seg[5]) });
+                    results.push({ category: 'F13', code: seg[6], ...lookup('F13', seg[6]) });
+                }
+                if (featureSegments[5] && featureSegments[5].length >= 2) {
+                    const seg = featureSegments[5];
+                    results.push({ category: 'F14A', code: seg[0], ...lookup('F14A', seg[0]) });
+                    results.push({ category: 'F14B', code: seg[1], ...lookup('F14B', seg[1]) });
+                }
+                if (featureSegments[6] && featureSegments[6].length >= 9) {
+                    const seg = featureSegments[6];
+                    results.push({ category: 'F15', code: seg[0], ...lookup('F15', seg[0]) });
+                    results.push({ category: 'F16', code: seg[1], ...lookup('F16', seg[1]) });
+                    results.push({ category: 'F17', code: seg[2], ...lookup('F17', seg[2]) });
+                    results.push({ category: 'F18', code: seg[3], ...lookup('F18', seg[3]) });
+                    results.push({ category: 'F19', code: seg[4], ...lookup('F19', seg[4]) });
+                    results.push({ category: 'F20', code: seg[5], ...lookup('F20', seg[5]) });
+                    results.push({ category: 'F21', code: seg[6], ...lookup('F21', seg[6]) });
+                    results.push({ category: 'F22', code: seg[7], ...lookup('F22', seg[7]) });
+                    results.push({ category: 'F23', code: seg[8], ...lookup('F23', seg[8]) });
+                }
+            }
+
+            currentResults = results;
+            buildSidebar(results);
+            renderResults(results);
+            resultCount.textContent = `${results.length} options decoded`;
+            document.getElementById('status-text').textContent = `Parsed ${results.length} options from model string`;
+        }
+
+        function lookup(category, code) {
+            const def = codeDefinitions[category];
+            if (!def) return { name: 'Unknown', description: 'Unknown category', position: category };
+            
+            const description = def.codes[code];
+            return {
+                name: def.name,
+                position: def.position,
+                description: description || 'Unknown code'
+            };
+        }
+
+        function renderResults(results) {
+            const tbody = document.getElementById('results-body');
+            
+            tbody.innerHTML = results.map((item, i) => `
+                <tr data-key="${item.category}" class="${i % 2 ? 'alt' : ''}">
+                    <td class="col-position">${item.position}</td>
+                    <td class="col-code">${item.code}</td>
+                    <td class="col-category">${item.name}</td>
+                    <td class="col-description ${item.description === 'Unknown code' ? 'unknown' : ''}">${item.description}</td>
+                </tr>
+            `).join('');
+        }
+
+        function performSearch() {
+            const query = document.getElementById('search-input').value.toLowerCase().trim();
+            const resultsContainer = document.getElementById('search-results');
+            const statsContainer = document.getElementById('search-stats');
+            
+            if (!query) {
+                resultsContainer.innerHTML = '';
+                statsContainer.textContent = 'Type to search all available codes and options';
+                return;
+            }
+
+            const matches = [];
+
+            for (const [catKey, catDef] of Object.entries(codeDefinitions)) {
+                for (const [code, description] of Object.entries(catDef.codes)) {
+                    if (description.toLowerCase().includes(query) || 
+                        catDef.name.toLowerCase().includes(query)) {
+                        matches.push({
+                            category: catKey,
+                            position: catDef.position,
+                            name: catDef.name,
+                            code: code,
+                            description: description
+                        });
+                    }
+                }
+            }
+
+            statsContainer.textContent = `Found ${matches.length} result${matches.length !== 1 ? 's' : ''} for "${query}"`;
+
+            if (matches.length === 0) {
+                resultsContainer.innerHTML = '<div class="no-results">No matching codes found. Try different keywords.</div>';
+                return;
+            }
+
+            resultsContainer.innerHTML = matches.map(match => `
+                <div class="search-result-row">
+                    <div class="search-result-code">${match.code}</div>
+                    <div class="search-result-info">
+                        <div class="search-result-category">${match.position} - ${match.name}</div>
+                        <div class="search-result-desc">${highlightMatch(match.description, query)}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function highlightMatch(text, query) {
+            const regex = new RegExp(`(${escapeRegex(query)})`, 'gi');
+            return text.replace(regex, '<mark>$1</mark>');
+        }
+
+        function escapeRegex(string) {
+            return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            buildSidebar([]);
+        });
+    </script>
+</body>
+</html>
