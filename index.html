@@ -494,6 +494,88 @@
             outline: 2px solid var(--accent-blue);
             outline-offset: -2px;
         }
+
+        /* Dependency validation warnings */
+        .validation-panel {
+            background: #fff8e6;
+            border-bottom: 1px solid #f0c36d;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .validation-header {
+            padding: 8px 12px;
+            background: #f5a623;
+            color: white;
+            font-weight: 600;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            position: sticky;
+            top: 0;
+        }
+
+        .validation-header-icon {
+            font-size: 14px;
+        }
+
+        .validation-item {
+            padding: 8px 12px;
+            border-bottom: 1px solid #f0e0c0;
+            font-size: 12px;
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+        }
+
+        .validation-item:last-child {
+            border-bottom: none;
+        }
+
+        .validation-item-icon {
+            color: #f5a623;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        .validation-item-text {
+            flex: 1;
+        }
+
+        .validation-item-condition {
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+
+        .validation-item-issue {
+            color: #8a6d3b;
+        }
+
+        .validation-item-hint {
+            color: var(--accent-blue);
+            font-style: italic;
+            margin-top: 2px;
+        }
+
+        .results-table tr.has-warning {
+            background: #fff8e6;
+        }
+
+        .results-table tr.has-warning:hover {
+            background: #fff3cd;
+        }
+
+        .warning-badge {
+            display: inline-block;
+            background: #f5a623;
+            color: white;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 3px;
+            margin-left: 8px;
+            font-weight: 600;
+        }
     </style>
 </head>
 <body>
@@ -534,6 +616,14 @@
                     <div class="results-header">
                         <span>Decoded Options</span>
                         <span id="result-count"></span>
+                    </div>
+                    <div class="validation-panel" id="validation-panel" style="display: none;" role="alert" aria-live="polite">
+                        <div class="validation-header">
+                            <span class="validation-header-icon">⚠</span>
+                            <span>Code Dependency Warnings</span>
+                            <span id="validation-count"></span>
+                        </div>
+                        <div id="validation-items"></div>
                     </div>
                     <table class="results-table">
                         <thead>
@@ -1522,6 +1612,279 @@
             'F23': [56, 57]
         };
 
+        // Code dependency rules - defines valid combinations and warns on conflicts
+        const dependencyRules = [
+            // A1 = 0 (Air Handling Unit) restrictions
+            {
+                condition: { category: 'A1', codes: ['0'] },
+                affects: 'A2',
+                validCodes: ['U', 'W', '2', '4'],
+                message: 'Air Handling Unit (A1=0) requires Chilled Water (U, W) or Non-Compressorized (2, 4) configuration',
+                hint: 'A2 should be U, W, 2, or 4 for AHU'
+            },
+            {
+                condition: { category: 'A1', codes: ['0'] },
+                affects: 'A4',
+                validCodes: ['H', 'J', 'K', 'L', 'M', 'N'],
+                message: 'Air Handling Unit (A1=0) uses serpentine coil configuration options',
+                hint: 'A4 should use serpentine options (H-N) for coil config'
+            },
+            // A1 = K (Variable Speed) + A2 = 6 special case
+            {
+                condition: { category: 'A1', codes: ['K'], and: { category: 'A2', codes: ['6'] } },
+                info: true,
+                message: 'Variable Speed Scroll (A1=K) + Heat Pump (A2=6) = Zero Degree Cold Climate Air-Source Heat Pump',
+                hint: 'This is a special cold climate heat pump configuration'
+            },
+            // A2 = 6 or 7 (Heat Pump) requires heat pump staging
+            {
+                condition: { category: 'A2', codes: ['6', '7'] },
+                affects: 'A4',
+                validCodes: ['B', 'C', 'D', 'E', 'F', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'Y', 'Z'],
+                message: 'Heat Pump configuration (A2=6 or 7) requires heat pump staging options',
+                hint: 'A4 should use heat pump staging (B-F, P-Z) with auxiliary heat stages'
+            },
+            // A2 = J, K, R, T (Water-Cooled) enables Feature 21
+            {
+                condition: { category: 'A2', codes: ['J', 'K', 'R', 'T'] },
+                enables: 'F21',
+                info: true,
+                message: 'Water-Cooled Condenser (A2=J/K/R/T) enables Water-Cooled Condenser options (F21)',
+                hint: 'F21 options (balancing valves, flow switch, etc.) are now applicable'
+            },
+            // A2 = U or W (Chilled Water) - refrigeration options don't apply
+            {
+                condition: { category: 'A2', codes: ['U', 'W'] },
+                affects: 'F7',
+                validCodes: ['0'],
+                message: 'Chilled Water configuration (A2=U/W) - Refrigeration Control options not applicable',
+                hint: 'F7 should be 0 (Standard) for chilled water units'
+            },
+            {
+                condition: { category: 'A2', codes: ['U', 'W'] },
+                affects: 'F8',
+                validCodes: ['0'],
+                message: 'Chilled Water configuration (A2=U/W) - Refrigeration Options not applicable',
+                hint: 'F8 should be 0 (Standard) for chilled water units'
+            },
+            {
+                condition: { category: 'A2', codes: ['U', 'W'] },
+                affects: 'F9',
+                validCodes: ['0'],
+                message: 'Chilled Water configuration (A2=U/W) - Refrigeration Accessories not applicable',
+                hint: 'F9 should be 0 (Standard) for chilled water units'
+            },
+            // B1 = 0 (No Heating) restrictions
+            {
+                condition: { category: 'B1', codes: ['0'] },
+                affects: 'B2',
+                validCodes: ['0'],
+                message: 'No Heating (B1=0) requires B2 to be 0',
+                hint: 'B2 should be 0 when there is no heating'
+            },
+            {
+                condition: { category: 'B1', codes: ['0'] },
+                affects: 'B3',
+                validCodes: ['0'],
+                message: 'No Heating (B1=0) requires B3 to be 0',
+                hint: 'B3 should be 0 when there is no heating'
+            },
+            // B1 = C, D, E, F (Steam/Hot Water) uses coil rows for B2 and serpentine for B3
+            {
+                condition: { category: 'B1', codes: ['C', 'D', 'E', 'F'] },
+                affects: 'B2',
+                validCodes: ['H', 'J'],
+                message: 'Steam/Hot Water heating (B1=C/D/E/F) uses coil row options for B2',
+                hint: 'B2 should be H (1 Row) or J (2 Row) for steam/hot water'
+            },
+            {
+                condition: { category: 'B1', codes: ['C', 'D', 'E', 'F'] },
+                affects: 'B3',
+                validCodes: ['H', 'J', 'K', 'L', 'M', 'N'],
+                message: 'Steam/Hot Water heating (B1=C/D/E/F) uses serpentine options for B3',
+                hint: 'B3 should use serpentine options (H-N) for steam/hot water'
+            },
+            // F1A = ERW options enable F12 options C, D
+            {
+                condition: { category: 'F1A', codes: ['F', 'G', 'H', 'J', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'Y', 'Z', '1', '2', '3'] },
+                enables: 'F12',
+                enabledCodes: ['C', 'D', 'G', 'H', 'K', 'L', 'N', 'R', 'S', 'U', 'Y', '2', '3', '6', '7', '8'],
+                info: true,
+                message: 'Energy Recovery Wheel (ERW) configuration enables ERW Defrost/Rotation Detection options in F12',
+                hint: 'F12 options C (Defrost) and D (Rotation Detection) are now applicable'
+            },
+            // F1A = K or M (100% OA) - return blower options may not apply
+            {
+                condition: { category: 'F1A', codes: ['K', 'M'] },
+                affects: 'F1B',
+                validCodes: ['0'],
+                message: '100% Outside Air configuration (F1A=K/M) - Return blower options typically not needed',
+                hint: 'F1B should typically be 0 for 100% OA units (no return air)'
+            },
+            {
+                condition: { category: 'F1A', codes: ['K', 'M'] },
+                affects: 'F1C',
+                validCodes: ['0'],
+                message: '100% Outside Air configuration (F1A=K/M) - Return blower not needed',
+                hint: 'F1C should be 0 for 100% OA units'
+            },
+            {
+                condition: { category: 'F1A', codes: ['K', 'M'] },
+                affects: 'F1D',
+                validCodes: ['0'],
+                message: '100% Outside Air configuration (F1A=K/M) - Return blower motor not needed',
+                hint: 'F1D should be 0 for 100% OA units'
+            },
+            // F1B = 0 (No Return Blower) restrictions
+            {
+                condition: { category: 'F1B', codes: ['0'] },
+                affects: 'F1C',
+                validCodes: ['0'],
+                message: 'No Return Blower Config (F1B=0) requires F1C to be 0',
+                hint: 'F1C should be 0 when there is no return blower'
+            },
+            {
+                condition: { category: 'F1B', codes: ['0'] },
+                affects: 'F1D',
+                validCodes: ['0'],
+                message: 'No Return Blower Config (F1B=0) requires F1D to be 0',
+                hint: 'F1D should be 0 when there is no return blower'
+            },
+            // F14A = 0 (No Preheat) restrictions
+            {
+                condition: { category: 'F14A', codes: ['0'] },
+                affects: 'F14B',
+                validCodes: ['0'],
+                message: 'No Preheat (F14A=0) requires F14B to be 0',
+                hint: 'F14B should be 0 when there is no preheat'
+            },
+            // F14A = A, B (Steam Preheat) uses serpentine options
+            {
+                condition: { category: 'F14A', codes: ['A', 'B'] },
+                affects: 'F14B',
+                validCodes: ['A', 'B', 'C', 'D', 'E', 'F'],
+                message: 'Steam Preheat (F14A=A/B) uses serpentine sizing options',
+                hint: 'F14B should use serpentine options (A-F) for steam preheat'
+            },
+            // F14A = C, D (Hot Water Preheat) uses serpentine options
+            {
+                condition: { category: 'F14A', codes: ['C', 'D'] },
+                affects: 'F14B',
+                validCodes: ['A', 'B', 'C', 'D', 'E', 'F'],
+                message: 'Hot Water Preheat (F14A=C/D) uses serpentine sizing options',
+                hint: 'F14B should use serpentine options (A-F) for hot water preheat'
+            },
+            // F14A = E (Electric Preheat) uses kW options
+            {
+                condition: { category: 'F14A', codes: ['E'] },
+                affects: 'F14B',
+                validCodes: ['G', 'H', 'J', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'U'],
+                message: 'Electric Preheat (F14A=E) uses kW sizing options',
+                hint: 'F14B should use kW options (G-U) for electric preheat'
+            }
+        ];
+
+        // Validate code dependencies and return warnings
+        function validateDependencies(results) {
+            const warnings = [];
+            const codeMap = {};
+
+            // Build a map of category -> code for quick lookup
+            results.forEach(r => {
+                codeMap[r.category] = r.code;
+            });
+
+            // Check each rule
+            dependencyRules.forEach(rule => {
+                const conditionCategory = rule.condition.category;
+                const conditionCodes = rule.condition.codes;
+
+                // Check if the condition is met
+                if (!codeMap[conditionCategory] || !conditionCodes.includes(codeMap[conditionCategory])) {
+                    return; // Condition not met, skip this rule
+                }
+
+                // Check for compound condition (and clause)
+                if (rule.condition.and) {
+                    const andCategory = rule.condition.and.category;
+                    const andCodes = rule.condition.and.codes;
+                    if (!codeMap[andCategory] || !andCodes.includes(codeMap[andCategory])) {
+                        return; // Compound condition not met
+                    }
+                }
+
+                // If this is just an info rule (no validation needed)
+                if (rule.info && !rule.affects) {
+                    warnings.push({
+                        type: 'info',
+                        conditionCategory,
+                        conditionCode: codeMap[conditionCategory],
+                        message: rule.message,
+                        hint: rule.hint
+                    });
+                    return;
+                }
+
+                // Check the affected category
+                if (rule.affects && codeMap[rule.affects]) {
+                    const affectedCode = codeMap[rule.affects];
+                    if (!rule.validCodes.includes(affectedCode)) {
+                        warnings.push({
+                            type: 'warning',
+                            conditionCategory,
+                            conditionCode: codeMap[conditionCategory],
+                            affectedCategory: rule.affects,
+                            affectedCode,
+                            validCodes: rule.validCodes,
+                            message: rule.message,
+                            hint: rule.hint
+                        });
+                    }
+                }
+            });
+
+            return warnings;
+        }
+
+        // Render validation warnings in the UI
+        function renderValidationWarnings(warnings) {
+            const panel = document.getElementById('validation-panel');
+            const itemsContainer = document.getElementById('validation-items');
+            const countSpan = document.getElementById('validation-count');
+
+            if (warnings.length === 0) {
+                panel.style.display = 'none';
+                return [];
+            }
+
+            const warningCount = warnings.filter(w => w.type === 'warning').length;
+            const infoCount = warnings.filter(w => w.type === 'info').length;
+
+            let countText = '';
+            if (warningCount > 0) countText += `${warningCount} warning${warningCount !== 1 ? 's' : ''}`;
+            if (warningCount > 0 && infoCount > 0) countText += ', ';
+            if (infoCount > 0) countText += `${infoCount} info`;
+            countSpan.textContent = `(${countText})`;
+
+            itemsContainer.innerHTML = warnings.map(w => `
+                <div class="validation-item">
+                    <span class="validation-item-icon">${w.type === 'warning' ? '⚠' : 'ℹ'}</span>
+                    <div class="validation-item-text">
+                        <div class="validation-item-condition">
+                            ${w.conditionCategory}=${w.conditionCode}${w.affectedCategory ? ` → ${w.affectedCategory}=${w.affectedCode}` : ''}
+                        </div>
+                        <div class="validation-item-issue">${w.message}</div>
+                        <div class="validation-item-hint">${w.hint}</div>
+                    </div>
+                </div>
+            `).join('');
+
+            panel.style.display = 'block';
+
+            // Return affected categories for highlighting in table
+            return warnings.filter(w => w.type === 'warning').map(w => w.affectedCategory);
+        }
+
         // Debounce function
         function debounce(func, wait) {
             let timeout;
@@ -1752,9 +2115,17 @@
 
             currentResults = results;
             buildSidebar(results);
-            renderResults(results);
-            resultCount.textContent = `${results.length} options decoded`;
-            document.getElementById('status-text').textContent = `Parsed ${results.length} options from model string`;
+
+            // Validate dependencies and get warnings
+            const warnings = validateDependencies(results);
+            const warningCategories = renderValidationWarnings(warnings);
+
+            // Render results with warning highlights
+            renderResults(results, warningCategories);
+
+            const warningCount = warnings.filter(w => w.type === 'warning').length;
+            resultCount.textContent = `${results.length} options decoded${warningCount > 0 ? `, ${warningCount} warning${warningCount !== 1 ? 's' : ''}` : ''}`;
+            document.getElementById('status-text').textContent = `Parsed ${results.length} options from model string${warningCount > 0 ? ` (${warningCount} dependency warning${warningCount !== 1 ? 's' : ''})` : ''}`;
         }
 
         function lookup(category, code) {
@@ -1769,17 +2140,20 @@
             };
         }
 
-        function renderResults(results) {
+        function renderResults(results, warningCategories = []) {
             const tbody = document.getElementById('results-body');
-            
-            tbody.innerHTML = results.map((item, i) => `
-                <tr data-key="${item.category}" class="${i % 2 ? 'alt' : ''}">
+
+            tbody.innerHTML = results.map((item, i) => {
+                const hasWarning = warningCategories.includes(item.category);
+                const rowClass = `${i % 2 ? 'alt' : ''} ${hasWarning ? 'has-warning' : ''}`.trim();
+                return `
+                <tr data-key="${item.category}" class="${rowClass}">
                     <td class="col-position">${item.position}</td>
-                    <td class="col-code">${item.code}</td>
+                    <td class="col-code">${item.code}${hasWarning ? '<span class="warning-badge">!</span>' : ''}</td>
                     <td class="col-category">${item.name}</td>
                     <td class="col-description ${item.description === 'Unknown code' ? 'unknown' : ''}">${item.description}</td>
                 </tr>
-            `).join('');
+            `}).join('');
         }
 
         function performSearch() {
