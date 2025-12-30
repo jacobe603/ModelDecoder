@@ -1573,6 +1573,32 @@
             }
         };
 
+        // Heating capacity data from Table 2 - Electric and Gas Heating Capacities
+        const heatingCapacityData = {
+            // code: { gasInput: MBH, gasOutput: MBH, electric208: kW, electric230_460_575: kW }
+            "1": { gasInput: 60.0, gasOutput: 48.6, electric208: 7.5, electricOther: 10 },
+            "2": { gasInput: 90.0, gasOutput: 72.0, electric208: 15.0, electricOther: 20 },
+            "3": { gasInput: 100.0, gasOutput: 81.0, electric208: 22.5, electricOther: 30 },
+            "4": { gasInput: 270.0, gasOutput: 218.7, electric208: 30.0, electricOther: 40 },
+            "5": { gasInput: 140.0, gasOutput: 113.4, electric208: 37.5, electricOther: 50 },
+            "6": { gasInput: 390.0, gasOutput: 315.9, electric208: 45.0, electricOther: 60 },
+            "7": { gasInput: 160.0, gasOutput: 129.6, electric208: 60.1, electricOther: 80 },
+            "8": { gasInput: 405.0, gasOutput: 328.1, electric208: 75.1, electricOther: 100 },
+            "9": { gasInput: null, gasOutput: null, electric208: 90.1, electricOther: 120 },
+            "A": { gasInput: null, gasOutput: null, electric208: 120.1, electricOther: 160 },
+            "B": { gasInput: null, gasOutput: null, electric208: 150.2, electricOther: 200 },
+            "C": { gasInput: 540.0, gasOutput: 432.0, electric208: 180.2, electricOther: 240 },
+            "D": { gasInput: 810.0, gasOutput: 648.0, electric208: 210.3, electricOther: 280 },
+            "E": { gasInput: 1080.0, gasOutput: 864.0, electric208: 240.3, electricOther: 320 },
+            "F": { gasInput: 195.0, gasOutput: 156.0, electric208: null, electricOther: null },
+            "G": { gasInput: 292.5, gasOutput: 234.0, electric208: null, electricOther: null },
+            "K": { gasInput: 150.0, gasOutput: 120.0, electric208: null, electricOther: null },
+            "L": { gasInput: 210.0, gasOutput: 168.0, electric208: null, electricOther: null },
+            "M": { gasInput: 800.0, gasOutput: 640.0, electric208: null, electricOther: null },
+            "N": { gasInput: 1600.0, gasOutput: 1280.0, electric208: null, electricOther: null },
+            "P": { gasInput: 2400.0, gasOutput: 1920.0, electric208: null, electricOther: null }
+        };
+
         // Navigation structure matching AAON app
         const navStructure = [
             { key: 'GEN', name: 'Generation', indent: false },
@@ -2172,6 +2198,9 @@
                 }
             }
 
+            // Enhance B2 with heating capacity based on B1 (heating type) and voltage
+            enhanceHeatingCapacity(results);
+
             currentResults = results;
             buildSidebar(results);
 
@@ -2187,10 +2216,59 @@
             document.getElementById('status-text').textContent = `Parsed ${results.length} options from model string${warningCount > 0 ? ` (${warningCount} dependency warning${warningCount !== 1 ? 's' : ''})` : ''}`;
         }
 
+        // Enhance B2 heating designation with capacity data based on B1 and voltage
+        function enhanceHeatingCapacity(results) {
+            // Find B1 (heating type), B2 (heating designation), and VOLTAGE in results
+            const b1Result = results.find(r => r.category === 'B1');
+            const b2Result = results.find(r => r.category === 'B2');
+            const voltageResult = results.find(r => r.category === 'VOLTAGE');
+
+            if (!b2Result || !b1Result || b2Result.code === '0') return;
+
+            const capacityData = heatingCapacityData[b2Result.code];
+            if (!capacityData) return;
+
+            const b1Code = b1Result.code;
+            const voltageCode = voltageResult ? voltageResult.code : '3'; // default to 460V
+
+            // Determine heating type
+            const isElectric = b1Code === '1';
+            const isGas = ['2', '3', '4', '5', '6', '7', '8', '9'].includes(b1Code);
+            const isSteamOrHotWater = ['C', 'D', 'E', 'F'].includes(b1Code);
+
+            let capacityStr = '';
+
+            if (isElectric) {
+                // Electric heat - check voltage
+                const is208V = voltageCode === '8' || voltageCode === '9';
+                if (is208V && capacityData.electric208 !== null) {
+                    capacityStr = ` — ${capacityData.electric208} kW @ 208V`;
+                } else if (!is208V && capacityData.electricOther !== null) {
+                    // Determine voltage label
+                    let voltageLabel = '230/460/575V';
+                    if (voltageCode === '1' || voltageCode === '2') voltageLabel = '230V';
+                    else if (voltageCode === '3') voltageLabel = '460V';
+                    else if (voltageCode === '4') voltageLabel = '575V';
+                    else if (voltageCode === '6') voltageLabel = '380V';
+                    capacityStr = ` — ${capacityData.electricOther} kW @ ${voltageLabel}`;
+                }
+            } else if (isGas) {
+                // Gas heat - show input capacity
+                if (capacityData.gasInput !== null) {
+                    capacityStr = ` — ${capacityData.gasInput} MBH Input (${capacityData.gasOutput} MBH Output)`;
+                }
+            }
+            // Steam/Hot Water coils don't have fixed capacities in this table
+
+            if (capacityStr) {
+                b2Result.description += capacityStr;
+            }
+        }
+
         function lookup(category, code) {
             const def = codeDefinitions[category];
             if (!def) return { name: 'Unknown', description: 'Unknown category', position: category };
-            
+
             const description = def.codes[code];
             return {
                 name: def.name,
