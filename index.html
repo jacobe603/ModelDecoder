@@ -644,6 +644,174 @@
             margin-left: 8px;
             font-weight: 600;
         }
+
+        /* Worksheet Modal Styles */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: var(--bg-white);
+            border-radius: 4px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 480px;
+            max-height: 90vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal-header {
+            background: #4a7c9b;
+            color: white;
+            padding: 12px 16px;
+            font-weight: 600;
+            font-size: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 0 4px;
+            line-height: 1;
+            opacity: 0.8;
+        }
+
+        .modal-close:hover {
+            opacity: 1;
+        }
+
+        .modal-body {
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid var(--border-dark);
+            border-radius: 3px;
+            font-family: inherit;
+            font-size: 13px;
+            color: var(--text-primary);
+            background: var(--bg-white);
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 1px var(--accent-blue);
+        }
+
+        .form-input::placeholder {
+            color: #999;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 16px;
+        }
+
+        .form-row .form-group {
+            flex: 1;
+        }
+
+        .modal-footer {
+            padding: 12px 20px;
+            background: var(--bg-header);
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 3px;
+            font-family: inherit;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s, border-color 0.2s;
+        }
+
+        .btn-secondary {
+            background: var(--bg-white);
+            border: 1px solid var(--border-dark);
+            color: var(--text-secondary);
+        }
+
+        .btn-secondary:hover {
+            background: var(--row-hover);
+            border-color: var(--border-dark);
+        }
+
+        .btn-primary {
+            background: var(--accent-blue);
+            border: 1px solid var(--accent-blue);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #006abc;
+            border-color: #006abc;
+        }
+
+        .worksheet-btn {
+            padding: 6px 12px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-white);
+            font-family: inherit;
+            font-size: 12px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            border-radius: 3px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .worksheet-btn:hover {
+            background: var(--accent-blue-light);
+            border-color: var(--accent-blue);
+            color: var(--accent-blue);
+        }
     </style>
 </head>
 <body>
@@ -651,6 +819,10 @@
         <div class="title-bar">
             <div class="app-icon">A</div>
             <span class="app-title">AAON RN Series Model String Parser</span>
+            <div style="flex: 1;"></div>
+            <button class="worksheet-btn" onclick="openWorksheetModal()">
+                <span>&#128221;</span> Worksheet Info
+            </button>
         </div>
 
         <div class="model-string-bar">
@@ -732,6 +904,46 @@
         <div class="status-bar">
             <span id="status-text" aria-live="polite">Ready</span>
             <span>AAON RN/RQ Series Reference Tool</span>
+        </div>
+    </div>
+
+    <!-- Worksheet Modal -->
+    <div class="modal-overlay" id="worksheet-modal" onclick="closeWorksheetModal(event)">
+        <div class="modal" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <span>Unit Worksheet Information</span>
+                <button class="modal-close" onclick="closeWorksheetModal()" aria-label="Close modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="worksheet-tag">Tag</label>
+                        <input type="text" class="form-input" id="worksheet-tag" placeholder="Enter tag...">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="worksheet-for">Unit Worksheet For</label>
+                        <input type="text" class="form-input" id="worksheet-for" placeholder="Enter name...">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="worksheet-job-name">Job Name</label>
+                        <input type="text" class="form-input" id="worksheet-job-name" placeholder="Enter job name...">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="worksheet-date">Unit Worksheet Date</label>
+                        <input type="date" class="form-input" id="worksheet-date">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="worksheet-job-number">Job Number</label>
+                    <input type="text" class="form-input" id="worksheet-job-number" placeholder="Enter job number...">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeWorksheetModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="saveWorksheet()">Save</button>
+            </div>
         </div>
     </div>
 
@@ -2537,6 +2749,66 @@
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
             buildSidebar([]);
+            initWorksheetDate();
+            loadWorksheetData();
+        });
+
+        // Worksheet Modal Functions
+        function openWorksheetModal() {
+            document.getElementById('worksheet-modal').classList.add('active');
+            document.getElementById('worksheet-tag').focus();
+        }
+
+        function closeWorksheetModal(event) {
+            if (event && event.target !== event.currentTarget) return;
+            document.getElementById('worksheet-modal').classList.remove('active');
+        }
+
+        function initWorksheetDate() {
+            const dateInput = document.getElementById('worksheet-date');
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            dateInput.value = `${year}-${month}-${day}`;
+        }
+
+        function saveWorksheet() {
+            const worksheetData = {
+                tag: document.getElementById('worksheet-tag').value,
+                worksheetFor: document.getElementById('worksheet-for').value,
+                jobName: document.getElementById('worksheet-job-name').value,
+                date: document.getElementById('worksheet-date').value,
+                jobNumber: document.getElementById('worksheet-job-number').value
+            };
+
+            // Store in localStorage for persistence
+            localStorage.setItem('worksheetData', JSON.stringify(worksheetData));
+
+            closeWorksheetModal();
+            updateStatus('Worksheet information saved');
+        }
+
+        function loadWorksheetData() {
+            const saved = localStorage.getItem('worksheetData');
+            if (saved) {
+                const data = JSON.parse(saved);
+                document.getElementById('worksheet-tag').value = data.tag || '';
+                document.getElementById('worksheet-for').value = data.worksheetFor || '';
+                document.getElementById('worksheet-job-name').value = data.jobName || '';
+                document.getElementById('worksheet-date').value = data.date || '';
+                document.getElementById('worksheet-job-number').value = data.jobNumber || '';
+            }
+        }
+
+        // Handle Escape key to close modal
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                const modal = document.getElementById('worksheet-modal');
+                if (modal.classList.contains('active')) {
+                    closeWorksheetModal();
+                }
+            }
         });
     </script>
 </body>
