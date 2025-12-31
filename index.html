@@ -812,6 +812,65 @@
             border-color: var(--accent-blue);
             color: var(--accent-blue);
         }
+
+        /* Export buttons */
+        .export-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .export-btn {
+            padding: 4px 12px;
+            border: 1px solid rgba(255,255,255,0.3);
+            background: rgba(255,255,255,0.1);
+            color: white;
+            font-family: inherit;
+            font-size: 11px;
+            cursor: pointer;
+            border-radius: 3px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .export-btn:hover {
+            background: rgba(255,255,255,0.2);
+            border-color: rgba(255,255,255,0.5);
+        }
+
+        .export-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Toast notification */
+        .toast {
+            position: fixed;
+            bottom: 60px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: #333;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 4px;
+            font-size: 13px;
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 2000;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        .toast.success {
+            background: #28a745;
+        }
+
+        .toast.error {
+            background: #dc3545;
+        }
     </style>
 </head>
 <body>
@@ -859,6 +918,16 @@
                 <div class="results-panel">
                     <div class="results-header">
                         <span>Decoded Options</span>
+                        <div class="export-buttons">
+                            <button class="export-btn" onclick="exportToClipboard()" id="btn-copy" disabled title="Copy formatted document to clipboard">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                                Copy
+                            </button>
+                            <button class="export-btn" onclick="exportToPrint()" id="btn-print" disabled title="Print/Export as PDF">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+                                Print/PDF
+                            </button>
+                        </div>
                         <span id="result-count"></span>
                     </div>
                     <div class="validation-panel" id="validation-panel" style="display: none;" role="alert" aria-live="polite">
@@ -946,6 +1015,9 @@
             </div>
         </div>
     </div>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toast"></div>
 
     <script>
         // Complete AAON RN Series Code Definitions
@@ -2324,8 +2396,10 @@
             if (!input) {
                 resultsBody.innerHTML = '<tr><td colspan="5" class="no-results">Enter a model string to decode</td></tr>';
                 buildSidebar([]);
+                currentResults = [];
                 resultCount.textContent = '';
                 document.getElementById('status-text').textContent = 'Ready';
+                updateExportButtons();
                 return;
             }
 
@@ -2443,6 +2517,7 @@
             const warningCount = warnings.filter(w => w.type === 'warning').length;
             resultCount.textContent = `${results.length} options decoded${warningCount > 0 ? `, ${warningCount} warning${warningCount !== 1 ? 's' : ''}` : ''}`;
             document.getElementById('status-text').textContent = `Parsed ${results.length} options from model string${warningCount > 0 ? ` (${warningCount} dependency warning${warningCount !== 1 ? 's' : ''})` : ''}`;
+            updateExportButtons();
         }
 
         // Enhance B2 heating designation with capacity data based on B1 and voltage
@@ -2810,6 +2885,169 @@
                 }
             }
         });
+
+        // Export functionality
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = 'toast ' + type;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        function updateExportButtons() {
+            const hasResults = currentResults.length > 0;
+            document.getElementById('btn-copy').disabled = !hasResults;
+            document.getElementById('btn-print').disabled = !hasResults;
+        }
+
+        function getWorksheetData() {
+            return {
+                tag: document.getElementById('worksheet-tag').value || '',
+                worksheetFor: document.getElementById('worksheet-for').value || '',
+                jobName: document.getElementById('worksheet-job-name').value || '',
+                date: document.getElementById('worksheet-date').value || '',
+                jobNumber: document.getElementById('worksheet-job-number').value || ''
+            };
+        }
+
+        function generateFormattedDocument() {
+            const worksheet = getWorksheetData();
+            const modelInput = document.getElementById('model-input').value.toUpperCase().trim();
+            const now = new Date();
+            const dateStr = worksheet.date ? new Date(worksheet.date + 'T00:00:00').toLocaleDateString() : now.toLocaleDateString();
+
+            let html = `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Unit Worksheet - ${worksheet.tag || 'Untitled'}</title>
+    <style>
+        body { font-family: Arial, sans-serif; font-size: 11pt; margin: 0.5in; line-height: 1.4; }
+        .header { margin-bottom: 20px; }
+        .header-row { display: flex; justify-content: space-between; margin-bottom: 8px; }
+        .header-label { font-weight: bold; }
+        .model-string { font-family: monospace; font-size: 12pt; background: #f5f5f5; padding: 8px; margin: 15px 0; border: 1px solid #ddd; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { border: 1px solid #ccc; padding: 6px 8px; text-align: left; font-size: 10pt; }
+        th { background: #4a7c9b; color: white; }
+        tr:nth-child(even) { background: #f9f9f9; }
+        .code { font-family: monospace; font-weight: bold; }
+        h1 { font-size: 16pt; margin: 0 0 15px 0; color: #333; }
+        @media print { body { margin: 0.25in; } }
+    </style>
+</head>
+<body>
+    <h1>AAON Unit Worksheet</h1>
+    <div class="header">
+        <div class="header-row">
+            <span><span class="header-label">Tag:</span> ${worksheet.tag || '—'}</span>
+            <span><span class="header-label">Unit Worksheet For:</span> ${worksheet.worksheetFor || '—'}</span>
+        </div>
+        <div class="header-row">
+            <span><span class="header-label">Job Name:</span> ${worksheet.jobName || '—'}</span>
+            <span><span class="header-label">Date:</span> ${dateStr}</span>
+        </div>
+        <div class="header-row">
+            <span><span class="header-label">Job Number:</span> ${worksheet.jobNumber || '—'}</span>
+        </div>
+    </div>
+    <div class="model-string">${modelInput}</div>
+    <table>
+        <thead>
+            <tr>
+                <th>Position</th>
+                <th>Code</th>
+                <th>Category</th>
+                <th>Description</th>
+            </tr>
+        </thead>
+        <tbody>`;
+
+            currentResults.forEach(result => {
+                html += `
+            <tr>
+                <td>${result.position}</td>
+                <td class="code">${result.code}</td>
+                <td>${result.category}</td>
+                <td>${result.description}</td>
+            </tr>`;
+            });
+
+            html += `
+        </tbody>
+    </table>
+</body>
+</html>`;
+            return html;
+        }
+
+        function exportToClipboard() {
+            if (currentResults.length === 0) {
+                showToast('Please parse a model string first', 'error');
+                return;
+            }
+
+            const html = generateFormattedDocument();
+
+            // Try to copy as HTML first, fall back to plain text
+            if (navigator.clipboard && navigator.clipboard.write) {
+                const blob = new Blob([html], { type: 'text/html' });
+                const clipboardItem = new ClipboardItem({ 'text/html': blob });
+                navigator.clipboard.write([clipboardItem]).then(() => {
+                    showToast('Copied to clipboard! Paste into Word or email.', 'success');
+                }).catch(() => {
+                    // Fallback to plain text
+                    copyPlainText();
+                });
+            } else {
+                copyPlainText();
+            }
+        }
+
+        function copyPlainText() {
+            const worksheet = getWorksheetData();
+            const modelInput = document.getElementById('model-input').value.toUpperCase().trim();
+            const dateStr = worksheet.date ? new Date(worksheet.date + 'T00:00:00').toLocaleDateString() : new Date().toLocaleDateString();
+
+            let text = `AAON Unit Worksheet\n`;
+            text += `==================\n\n`;
+            text += `Tag: ${worksheet.tag || '—'}\n`;
+            text += `Unit Worksheet For: ${worksheet.worksheetFor || '—'}\n`;
+            text += `Job Name: ${worksheet.jobName || '—'}\n`;
+            text += `Date: ${dateStr}\n`;
+            text += `Job Number: ${worksheet.jobNumber || '—'}\n\n`;
+            text += `Model String: ${modelInput}\n\n`;
+            text += `Decoded Options:\n`;
+            text += `-`.repeat(60) + `\n`;
+
+            currentResults.forEach(result => {
+                text += `${result.position.padEnd(8)} ${result.code.padEnd(6)} ${result.category.padEnd(20)} ${result.description}\n`;
+            });
+
+            navigator.clipboard.writeText(text).then(() => {
+                showToast('Copied to clipboard as plain text', 'success');
+            }).catch(() => {
+                showToast('Failed to copy to clipboard', 'error');
+            });
+        }
+
+        function exportToPrint() {
+            if (currentResults.length === 0) {
+                showToast('Please parse a model string first', 'error');
+                return;
+            }
+
+            const html = generateFormattedDocument();
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(html);
+            printWindow.document.close();
+
+            setTimeout(() => {
+                printWindow.print();
+            }, 250);
+        }
     </script>
 </body>
 </html>
